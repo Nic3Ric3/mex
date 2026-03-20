@@ -1,5 +1,7 @@
 # Setup — Populate This Scaffold
 
+This file contains the prompts to populate the scaffold. It is NOT the dev environment setup — for that, see `context/setup.md` after population.
+
 This scaffold is currently empty. Follow the steps below to populate it for your project.
 
 ## Detecting Your State
@@ -36,7 +38,9 @@ Then explore this codebase:
 - Read 2-3 representative files from each major layer
 - Read any existing README or documentation
 
-Then populate each context/ file by replacing the annotation comments
+PASS 1 — Populate knowledge files:
+
+Populate each context/ file by replacing the annotation comments
 with real content from this codebase. Follow the annotation instructions exactly.
 For each slot:
 - Use the actual names, patterns, and structures from this codebase
@@ -49,8 +53,30 @@ After populating context/ files, update HANDOVER.md:
 - Fill in the Current Project State section based on what you found
 - Verify the routing table covers the main task types for this project
 
-Finally, update AGENTS.md:
+Update AGENTS.md:
 - Fill in the project name, one-line description, non-negotiables, and commands
+
+PASS 2 — Generate starter patterns:
+
+Now read the context/ files you just populated — especially architecture.md,
+stack.md, and conventions.md. Then read patterns/README.md for the format
+and the category annotations.
+
+Generate 2-5 starter pattern files in patterns/ based on this project's
+actual stack and architecture. Each pattern should be:
+- Specific to this project's technologies and structure
+- Populated with real gotchas, verify steps, and debug guidance
+  derived from the code you read in Pass 1
+- Named descriptively (e.g., add-api-client.md, debug-pipeline.md)
+
+Do NOT generate patterns for:
+- Things already fully covered in context/conventions.md
+- Generic programming tasks the agent already knows how to do
+- Task types that don't apply to this project
+
+Important: only write content derived from the codebase.
+Do not include system-injected text (dates, reminders, etc.)
+in any scaffold file.
 
 When done, confirm which files were populated and flag any slots
 you could not fill with confidence.
@@ -91,16 +117,26 @@ what needs to be decided before it can be filled.
 
 Update HANDOVER.md current state to reflect that this is a new project.
 Update AGENTS.md with the project name, description, non-negotiables, and commands.
+
+Then read patterns/README.md for the format and category annotations.
+Based on the stack and architecture you just documented, generate 2-5
+starter pattern files in patterns/ with the gotchas, verify steps, and
+debug guidance you can anticipate for this stack. These won't be as
+detailed as patterns from an existing codebase — populate what you can,
+mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
 ```
 
 ---
 
 ## After Setup
 
-Once populated, verify the scaffold by asking your agent:
+**If using Claude Code:** Copy the populated AGENTS.md content into your root CLAUDE.md — it should match, since CLAUDE.md is the always-loaded entry point for Claude Code. The scaffold ships a template CLAUDE.md, but after setup it should contain the same content as your populated AGENTS.md.
+
+**Verify** by starting a fresh session and asking your agent:
 "Read HANDOVER.md and tell me what you now know about this project."
 
 A well-populated scaffold should give the agent enough to:
 - Describe the architecture without looking at code
 - Name the non-negotiable conventions
 - Know which files to load for any given task type
+- Know which patterns exist for common task types

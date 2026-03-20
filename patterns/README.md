@@ -2,19 +2,26 @@
 
 This folder contains task-specific guidance — the things you would tell your agent if you were sitting next to it. Not generic instructions. Project-specific accumulated wisdom.
 
+## How patterns get created
+
+**During setup:** After the context/ files are populated, the agent generates starter patterns based on the project's actual stack, architecture, and conventions. These are stack-specific — a Flask API project gets different patterns than a React SPA or a CLI tool.
+
+**Over time:** You or your agent add patterns as they emerge from real work — when something breaks, when a task has a non-obvious gotcha, when you've explained the same thing twice.
+
 ## What belongs here
 
 A pattern file is worth creating when:
-- You've explained the same thing to your agent more than twice
-- A task has a gotcha that isn't obvious from the codebase
+- A task type is common in this project and has a repeatable workflow
+- There are integration gotchas between components that aren't obvious from code
 - Something broke and you want to prevent it from breaking the same way again
-- There's a verify checklist specific to one type of task
+- A verify checklist specific to one type of task would catch mistakes early
 
 ## What does NOT belong here
 
 - Generic programming advice the agent already knows
 - Things already covered in `context/conventions.md`
 - Step-by-step instructions for things that are obvious from the code
+- Patterns that don't apply to this project's stack
 
 ## Format
 
@@ -34,6 +41,9 @@ last_updated: [YYYY-MM-DD]
 ## Context
 [What to load or know before starting this task type]
 
+## Steps
+[The workflow — what to do, in what order]
+
 ## Gotchas
 [The things that go wrong. What to watch out for.]
 
@@ -44,9 +54,36 @@ last_updated: [YYYY-MM-DD]
 [What to check when this task type breaks]
 ```
 
-## Example pattern files
+## Pattern categories to consider
 
-- `add-api-endpoint.md` — conventions for new endpoints, required middleware, response format
-- `database-migration.md` — how to write migrations safely, rollback strategy
-- `debug-auth.md` — diagnosis tree for authentication issues
-- `write-test.md` — testing conventions, what to mock, what not to mock
+<!-- The setup agent uses these categories to decide which starter patterns to generate.
+     Not every project needs all of these. Generate only what applies to THIS project's
+     stack and architecture. Aim for 2-5 starter patterns.
+
+     Category 1 — Common task patterns
+     The repeatable tasks in this project. What does a developer do most often?
+     Examples by project type:
+     - API: "add new endpoint", "add new model/entity"
+     - Frontend: "add new page/route", "add new component"
+     - CLI: "add new command", "add new flag/option"
+     - Pipeline: "add new pipeline stage", "add new data source"
+     Derive from: context/architecture.md (what are the major components?) and
+     context/conventions.md (what patterns exist for extending them?)
+
+     Category 2 — Integration patterns
+     How to work with the external dependencies in this project.
+     Every entry in context/stack.md "Key Libraries" or architecture.md "External Dependencies"
+     that has non-obvious setup, gotchas, or failure modes deserves a pattern.
+     Examples: "calling the payments API", "running database migrations",
+     "adding a new third-party service client"
+
+     Category 3 — Debug/diagnosis patterns
+     When something breaks, where do you look? Derive from the architecture flow —
+     each boundary between components is a potential failure point.
+     Examples: "debug webhook failures", "debug pipeline stage failures",
+     "diagnose auth/permission issues"
+
+     Category 4 — Deploy/release patterns
+     If the project has deployment steps that aren't fully automated or have gotchas.
+     Only generate if context/setup.md reveals non-trivial deployment.
+     Examples: "deploy to staging", "rollback a release", "update environment config" -->

@@ -33,7 +33,7 @@ last_updated: [YYYY-MM-DD]
      Format for each entry:
 
      ### [Decision Title]
-     **Date:** YYYY-MM-DD
+     **Date:** YYYY-MM-DD (check git history for real dates when possible)
      **Status:** Active | Superseded by [title]
      **Decision:** [What was decided, in one sentence]
      **Reasoning:** [Why this was chosen]

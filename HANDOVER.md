@@ -19,7 +19,9 @@ last_updated: [YYYY-MM-DD]
 
 # Session Bootstrap
 
-Read this file fully before doing anything else in this session.
+If you haven't already read `AGENTS.md`, read it now — it contains the project identity, non-negotiables, and commands.
+
+Then read this file fully before doing anything else in this session.
 
 ## Current Project State
 <!-- What is working. What is not yet built. Known issues.

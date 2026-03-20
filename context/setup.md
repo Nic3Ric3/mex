@@ -35,12 +35,13 @@ last_updated: [YYYY-MM-DD]
 
 ## Environment Variables
 <!-- Required environment variables and what they do.
-     Mark which are required vs optional.
+     Mark which are required vs optional vs conditionally required.
      Do NOT include actual values — this file is committed to version control.
-     Length: list all required, then optional.
+     Length: list all required, then conditional, then optional.
      Example:
      - `DATABASE_URL` (required) — PostgreSQL connection string
      - `JWT_SECRET` (required) — secret for signing tokens, min 32 chars
+     - `STRIPE_API_KEY` (required if payments enabled) — only needed when ENABLE_PAYMENTS=true
      - `SENDGRID_API_KEY` (optional) — only needed if email features are used -->
 
 ## Common Commands

@@ -15,7 +15,7 @@ last_updated: [YYYY-MM-DD]
 ## Non-Negotiables
 <!-- Hard rules the agent must never violate. Not preferences — rules.
      These are the things that, if broken, cause real damage to the codebase.
-     Length: 3-7 items maximum. More than 7 means the list has not been prioritised.
+     Length: 3-5 items. More than 5 means the list has not been prioritised.
      Example:
      - Never write database queries outside of the repository layer
      - Never commit secrets or API keys
@@ -25,6 +25,9 @@ last_updated: [YYYY-MM-DD]
 <!-- The exact commands needed to work on this project.
      Include: run dev server, run tests, run linter, build.
      Use the actual commands from this codebase — not placeholders.
+     For monorepos or projects with separate frontend/backend, group by area.
+     Target: keep this entire file under 150 tokens. For full-stack projects
+     with separate command sets, up to 200 tokens is acceptable.
      Example:
      - Dev: `npm run dev`
      - Test: `npm test`
