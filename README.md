@@ -100,7 +100,7 @@ The agent read 11 files in the right order. The pattern file told it exactly wha
 
 ```bash
 # From your project root
-git clone <repo-url> .mex
+git clone https://github.com/theDakshJaitly/mex.git .mex
 .mex/setup.sh
 ```
 
@@ -125,7 +125,7 @@ your-project/
 
 ```bash
 # From your project root
-git clone <repo-url> .mex
+git clone https://github.com/theDakshJaitly/mex.git .mex
 
 # Copy your tool config to project root
 cp .mex/.tool-configs/CLAUDE.md ./CLAUDE.md          # Claude Code
