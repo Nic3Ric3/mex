@@ -25,7 +25,7 @@ You are going to populate an AI context scaffold for this project.
 The scaffold lives in the root of this repository.
 
 Read the following files in order before doing anything else:
-1. HANDOVER.md — understand the scaffold structure
+1. ROUTER.md — understand the scaffold structure
 2. context/architecture.md — read the annotation comments to understand what belongs there
 3. context/stack.md — same
 4. context/conventions.md — same
@@ -49,7 +49,7 @@ For each slot:
   write "[TO DETERMINE]" and explain what information is needed
 - Keep length within the guidance given in each annotation
 
-After populating context/ files, update HANDOVER.md:
+After populating context/ files, update ROUTER.md:
 - Fill in the Current Project State section based on what you found
 - Verify the routing table covers the main task types for this project
 
@@ -68,6 +68,9 @@ actual stack and architecture. Each pattern should be:
 - Populated with real gotchas, verify steps, and debug guidance
   derived from the code you read in Pass 1
 - Named descriptively (e.g., add-api-client.md, debug-pipeline.md)
+
+After generating patterns, update patterns/INDEX.md with a row for each
+pattern file you created.
 
 Do NOT generate patterns for:
 - Things already fully covered in context/conventions.md
@@ -97,7 +100,7 @@ You are going to populate an AI context scaffold for a project that
 is just starting. Nothing is built yet.
 
 Read the following files in order before doing anything else:
-1. HANDOVER.md — understand the scaffold structure
+1. ROUTER.md — understand the scaffold structure
 2. All files in context/ — read the annotation comments in each
 
 Then ask me the following questions one section at a time.
@@ -115,7 +118,7 @@ After I answer, populate the context/ files based on my answers.
 For any slot you cannot fill yet, write "[TO BE DETERMINED]" and note
 what needs to be decided before it can be filled.
 
-Update HANDOVER.md current state to reflect that this is a new project.
+Update ROUTER.md current state to reflect that this is a new project.
 Update AGENTS.md with the project name, description, non-negotiables, and commands.
 
 Then read patterns/README.md for the format and category annotations.
@@ -124,6 +127,9 @@ starter pattern files in patterns/ with the gotchas, verify steps, and
 debug guidance you can anticipate for this stack. These won't be as
 detailed as patterns from an existing codebase — populate what you can,
 mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
+
+After generating patterns, update patterns/INDEX.md with a row for each
+pattern file you created.
 ```
 
 ---
@@ -133,7 +139,7 @@ mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
 **If using Claude Code:** Copy the populated `.mex/AGENTS.md` content into your root `CLAUDE.md` — it should match, since CLAUDE.md is the always-loaded entry point for Claude Code.
 
 **Verify** by starting a fresh session and asking your agent:
-"Read `.mex/HANDOVER.md` and tell me what you now know about this project."
+"Read `.mex/ROUTER.md` and tell me what you now know about this project."
 
 A well-populated scaffold should give the agent enough to:
 - Describe the architecture without looking at code

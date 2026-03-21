@@ -1,5 +1,5 @@
 ---
-name: handover
+name: router
 description: Session bootstrap and navigation hub. Read at the start of every session before any task. Contains project state, routing table, and behavioural contract.
 edges:
   - target: context/architecture.md
@@ -12,8 +12,8 @@ edges:
     condition: when making architectural choices or understanding why something is built a certain way
   - target: context/setup.md
     condition: when setting up the dev environment or running the project for the first time
-  - target: patterns/
-    condition: when starting a task — check if a pattern file exists for this task type
+  - target: patterns/INDEX.md
+    condition: when starting a task — check the pattern index for a matching pattern file
 last_updated: [YYYY-MM-DD]
 ---
 
@@ -51,14 +51,14 @@ Load the relevant file based on the current task. Always load `context/architect
 | Writing or reviewing code | `context/conventions.md` |
 | Making a design decision | `context/decisions.md` |
 | Setting up or running the project | `context/setup.md` |
-| Any specific task | Check `patterns/` for a matching pattern file |
+| Any specific task | Check `patterns/INDEX.md` for a matching pattern |
 
 ## Behavioural Contract
 
 These rules apply in every session, for every task:
 
 1. **Narrate navigation.** When you load a context file, say so explicitly: "Loading architecture context..." This keeps the developer informed and prevents silent context gaps.
-2. **Check patterns first.** Before starting any task, check if a pattern file exists in `patterns/` for this task type. If it exists, follow it.
+2. **Check patterns first.** Before starting any task, check `patterns/INDEX.md` for a matching pattern. If one exists, follow it.
 3. **Show verification.** After completing a task, explicitly check your output against `context/conventions.md`. State what you checked.
 4. **Flag deviations.** If you are about to do something that deviates from an established pattern in this codebase, say so before writing any code. State the deviation and why.
 5. **Update state.** When significant work completes, update the "Current Project State" section above.

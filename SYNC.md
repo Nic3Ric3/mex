@@ -33,7 +33,7 @@ Critical rules for updating:
   and add the new decision above it with today's date.
 - In all other files: update content to reflect current reality
 - Update last_updated in the YAML frontmatter of every file you change
-- After updating each file, update HANDOVER.md Current Project State
+- After updating each file, update ROUTER.md Current Project State
 
 When done, report:
 - Which files were updated and what changed

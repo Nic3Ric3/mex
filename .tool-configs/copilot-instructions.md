@@ -1,6 +1,6 @@
 ---
 name: agents
-description: Always-loaded project anchor. Read this first. Contains project identity, non-negotiables, commands, and pointer to HANDOVER.md for full context.
+description: Always-loaded project anchor. Read this first. Contains project identity, non-negotiables, commands, and pointer to ROUTER.md for full context.
 last_updated: [YYYY-MM-DD]
 ---
 
@@ -32,5 +32,5 @@ last_updated: [YYYY-MM-DD]
      - Build: `npm run build` -->
 
 ## Navigation
-At the start of every session, read `.mex/HANDOVER.md` before doing anything else.
+At the start of every session, read `.mex/ROUTER.md` before doing anything else.
 For full project context, patterns, and task guidance — everything is there.

@@ -220,7 +220,7 @@ if [ "$PROJECT_STATE" = "fresh" ]; then
 is just starting. Nothing is built yet.
 
 Read the following files in order before doing anything else:
-1. .mex/HANDOVER.md — understand the scaffold structure
+1. .mex/ROUTER.md — understand the scaffold structure
 2. All files in .mex/context/ — read the annotation comments in each
 
 Then ask me the following questions one section at a time.
@@ -238,7 +238,7 @@ After I answer, populate the .mex/context/ files based on my answers.
 For any slot you cannot fill yet, write "[TO BE DETERMINED]" and note
 what needs to be decided before it can be filled.
 
-Update .mex/HANDOVER.md current state to reflect that this is a new project.
+Update .mex/ROUTER.md current state to reflect that this is a new project.
 Update .mex/AGENTS.md with the project name, description, non-negotiables, and commands.
 
 Then read .mex/patterns/README.md for the format and category annotations.
@@ -248,6 +248,9 @@ debug guidance you can anticipate for this stack. These won'"'"'t be as
 detailed as patterns from an existing codebase — populate what you can,
 mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
 
+After generating patterns, update .mex/patterns/INDEX.md with a row for each
+pattern file you created.
+
 Important: only write content derived from the codebase or from my answers.
 Do not include system-injected text (dates, reminders, etc.) in any scaffold file.'
 else
@@ -255,7 +258,7 @@ else
 The scaffold lives in the .mex/ directory.
 
 Read the following files in order before doing anything else:
-1. .mex/HANDOVER.md — understand the scaffold structure
+1. .mex/ROUTER.md — understand the scaffold structure
 2. .mex/context/architecture.md — read the annotation comments to understand what belongs there
 3. .mex/context/stack.md — same
 4. .mex/context/conventions.md — same
@@ -279,7 +282,7 @@ For each slot:
   write "[TO DETERMINE]" and explain what information is needed
 - Keep length within the guidance given in each annotation
 
-After populating .mex/context/ files, update .mex/HANDOVER.md:
+After populating .mex/context/ files, update .mex/ROUTER.md:
 - Fill in the Current Project State section based on what you found
 - Verify the routing table covers the main task types for this project
 
@@ -298,6 +301,9 @@ actual stack and architecture. Each pattern should be:
 - Populated with real gotchas, verify steps, and debug guidance
   derived from the code you read in Pass 1
 - Named descriptively (e.g., add-api-client.md, debug-pipeline.md)
+
+After generating patterns, update .mex/patterns/INDEX.md with a row for each
+pattern file you created.
 
 Do NOT generate patterns for:
 - Things already fully covered in context/conventions.md
@@ -346,7 +352,7 @@ if [ "$SELECTED_CLAUDE" -eq 1 ] && command -v claude &>/dev/null; then
   ok "Scaffold populated."
   echo ""
   info "Verify by starting a fresh session and asking:"
-  info "  \"Read .mex/HANDOVER.md and tell me what you know about this project.\""
+  info "  \"Read .mex/ROUTER.md and tell me what you know about this project.\""
 
 else
   # Fallback — print the prompt for manual use

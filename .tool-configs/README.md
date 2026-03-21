@@ -1,7 +1,7 @@
 # Tool Configuration Files
 
 These files make the scaffold work with specific AI coding tools.
-All contain the same content — a pointer to `.mex/HANDOVER.md`.
+All contain the same content — a pointer to `.mex/ROUTER.md`.
 
 ## Which file does your tool use?
 
@@ -33,7 +33,7 @@ mkdir -p .github && cp .tool-configs/copilot-instructions.md ./.github/copilot-i
 
 ## If your tool is not listed
 
-Add "Read .mex/HANDOVER.md before starting any task" to your tool's system prompt
+Add "Read .mex/ROUTER.md before starting any task" to your tool's system prompt
 or paste it at the start of each session. The scaffold works identically.
 
 ## Content

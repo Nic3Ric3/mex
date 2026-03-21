@@ -20,7 +20,7 @@ Think of your codebase as a city and your AI agent as a new driver.
 
 **With CLAUDE.md alone**, you highlight the important parts. Better — but it's still one document, and when the road changes, nobody updates the map.
 
-**With mex**, you pave actual roads. The driver starts at a known intersection (HANDOVER.md), checks the routing table for today's destination, and follows signs to the relevant context. The roads exist whether or not the driver has been here before. When construction happens, SYNC.md resurfaces the roads.
+**With mex**, you pave actual roads. The driver starts at a known intersection (ROUTER.md), checks the routing table for today's destination, and follows signs to the relevant context. The roads exist whether or not the driver has been here before. When construction happens, SYNC.md resurfaces the roads.
 
 The scaffold isn't documentation. It's infrastructure.
 
@@ -30,7 +30,7 @@ CLAUDE.md and AGENTS.md solve **context injection** — getting information into
 
 | | CLAUDE.md alone | mex |
 |---|---|---|
-| **What the agent knows at session start** | Everything in the file (or nothing) | A 120-token anchor that says "read HANDOVER.md" |
+| **What the agent knows at session start** | Everything in the file (or nothing) | A 120-token anchor that says "read ROUTER.md" |
 | **How context scales** | File grows until attention degrades | Agent navigates to only the context it needs |
 | **What happens after a refactor** | Manual edits or stale docs | Run SYNC.md — agent detects and fixes drift |
 | **Task-specific guidance** | Generic rules for all tasks | Pattern files loaded per task type |
@@ -42,7 +42,7 @@ AGENTS.md is one section of this scaffold. We extend the standard, not replace i
 
 Real output from testing mex on [Agrow](https://github.com/), an AI-powered agricultural voice helpline (Python/Flask, Twilio, multi-provider AI pipeline).
 
-### HANDOVER.md — empty scaffold vs. populated
+### ROUTER.md — empty scaffold vs. populated
 
 **Before** (what you clone):
 ```markdown
@@ -90,7 +90,7 @@ We gave a fresh agent (no prior context) this task: *"Add a new API client for D
 
 **Without mex:** Agent reads some files, writes a client that works but doesn't match existing patterns, misses config injection, skips rate limiting.
 
-**With mex:** Agent automatically reads HANDOVER.md → routes to `context/conventions.md` → finds `patterns/add-api-client.md` → follows the step-by-step → produces a client that matches existing structure, uses `AppConfig` injection, includes rate limit config, and passes the conventions verify checklist.
+**With mex:** Agent automatically reads ROUTER.md → routes to `context/conventions.md` → finds `patterns/add-api-client.md` → follows the step-by-step → produces a client that matches existing structure, uses `AppConfig` injection, includes rate limit config, and passes the conventions verify checklist.
 
 The agent read 11 files in the right order. The pattern file told it exactly what to do. Zero guidance from the developer.
 
@@ -112,7 +112,7 @@ your-project/
 ├── CLAUDE.md          ← tool config (auto-loaded, points to .mex/)
 ├── .mex/              ← all scaffold files, contained
 │   ├── AGENTS.md
-│   ├── HANDOVER.md
+│   ├── ROUTER.md
 │   ├── SETUP.md
 │   ├── SYNC.md
 │   ├── context/
@@ -137,7 +137,7 @@ Then open `.mex/SETUP.md`, copy the setup prompt, paste it into your agent.
 
 ### Verify
 
-Ask your agent: *"Read `.mex/HANDOVER.md` and tell me what you know about this project."*
+Ask your agent: *"Read `.mex/ROUTER.md` and tell me what you know about this project."*
 
 If it can describe your architecture, name your services, and explain your conventions — the scaffold is working.
 
@@ -148,9 +148,9 @@ Session starts
     ↓
 Agent loads CLAUDE.md (auto-loaded by tool, lives at project root)
     ↓
-CLAUDE.md → "Read .mex/HANDOVER.md at session start"
+CLAUDE.md → "Read .mex/ROUTER.md at session start"
     ↓
-HANDOVER.md → routing table → loads relevant .mex/context/ file for this task
+ROUTER.md → routing table → loads relevant .mex/context/ file for this task
     ↓
 context/ file → points to .mex/patterns/ if task-specific wisdom exists
     ↓
@@ -180,7 +180,7 @@ The things you would tell your agent if you were sitting next to it. Gotchas, ve
 | File | Purpose |
 |------|---------|
 | `AGENTS.md` | Always-loaded anchor (~150 tokens) |
-| `HANDOVER.md` | Session bootstrap, routing table, behavioural contract |
+| `ROUTER.md` | Session bootstrap, routing table, behavioural contract |
 | `SETUP.md` | Population prompt — how to fill the scaffold |
 | `SYNC.md` | Resync prompt — how to realign after drift |
 
@@ -194,7 +194,7 @@ Small project? CLAUDE.md is all you need. Put your conventions in there, done.
 
 But once your project has 10+ services, multiple API clients, a deployment pipeline, and conventions that vary by layer — you hit a wall. Either CLAUDE.md becomes a 2000-line doc that burns tokens and dilutes attention, or you keep it short and the agent misses things.
 
-mex keeps CLAUDE.md short (~120 tokens) and turns it into a *pointer*: "Read `.mex/HANDOVER.md` before doing anything." From there, the agent navigates to only the context it needs. Your CLAUDE.md stays lean. Your agent stays informed.
+mex keeps CLAUDE.md short (~120 tokens) and turns it into a *pointer*: "Read `.mex/ROUTER.md` before doing anything." From there, the agent navigates to only the context it needs. Your CLAUDE.md stays lean. Your agent stays informed.
 
 **Use CLAUDE.md alone when:** your project is small, conventions are simple, one file covers it.
 
@@ -202,7 +202,7 @@ mex keeps CLAUDE.md short (~120 tokens) and turns it into a *pointer*: "Read `.m
 
 ### Does this work with tools other than Claude Code?
 
-Yes. The scaffold is tool-agnostic. The core files (AGENTS.md, HANDOVER.md, context/, patterns/) work with any agent that can read files. Tool-specific config files (`.cursorrules`, `.windsurfrules`, `copilot-instructions.md`) are provided in `.tool-configs/` — they all contain the same content.
+Yes. The scaffold is tool-agnostic. The core files (AGENTS.md, ROUTER.md, context/, patterns/) work with any agent that can read files. Tool-specific config files (`.cursorrules`, `.windsurfrules`, `copilot-instructions.md`) are provided in `.tool-configs/` — they all contain the same content.
 
 ### How much setup time?
 
