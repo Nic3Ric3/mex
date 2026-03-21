@@ -331,27 +331,17 @@ fi
 
 # Try to invoke Claude Code CLI directly
 if [ "$SELECTED_CLAUDE" -eq 1 ] && command -v claude &>/dev/null; then
-  header "Populating scaffold with Claude Code..."
+  header "Launching Claude Code to populate the scaffold..."
   echo ""
-  info "Running claude to read your codebase and fill the scaffold."
-  info "This may take a few minutes. The agent will work autonomously."
+  info "An interactive Claude Code session will open with the population prompt."
+  info "You'll see the agent working in real-time."
   echo ""
 
-  if [ "$PROJECT_STATE" = "fresh" ]; then
-    # Fresh projects need interactive mode — the agent asks questions
-    info "Fresh project detected — starting interactive session."
-    info "The agent will ask you questions about your project."
-    echo ""
-    claude -p "$SETUP_PROMPT"
-  else
-    # Existing/partial codebases — fully autonomous
-    claude -p "$SETUP_PROMPT"
-  fi
+  # Use interactive mode (not -p) so the user sees progress
+  claude "$SETUP_PROMPT"
 
   echo ""
-  ok "Scaffold populated."
-  echo ""
-  info "Verify by starting a fresh session and asking:"
+  ok "Done. Verify by starting a fresh session and asking:"
   info "  \"Read .mex/ROUTER.md and tell me what you know about this project.\""
 
 else
