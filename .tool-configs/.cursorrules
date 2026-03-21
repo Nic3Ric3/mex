@@ -31,6 +31,9 @@ last_updated: [YYYY-MM-DD]
      - Lint: `npm run lint`
      - Build: `npm run build` -->
 
+## Scaffold Growth
+After every task: if no pattern exists for the task type you just completed, create one. If a pattern or context file is now out of date, update it. The scaffold grows from real work, not just setup. See the GROW step in `.mex/ROUTER.md` for details.
+
 ## Navigation
 At the start of every session, read `.mex/ROUTER.md` before doing anything else.
 For full project context, patterns, and task guidance — everything is there.

@@ -254,16 +254,19 @@ Update .mex/ROUTER.md current state to reflect that this is a new project.
 Add rows to the routing table for any domain-specific context files you created.
 Update .mex/AGENTS.md with the project name, description, non-negotiables, and commands.
 
-Then read .mex/patterns/README.md for the format, categories, and generation rules.
-Walk through every category and generate a pattern file for each task type,
-integration, and failure boundary you can anticipate for this stack.
-Do not use a fixed number — generate as many as the project needs.
-These won'"'"'t be as detailed as patterns from an existing codebase — populate
-what you can, mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
+Read .mex/patterns/README.md for the format and categories.
+
+Generate 2-3 starter patterns for the most obvious task types you can
+anticipate for this stack. Focus on the tasks a developer will do first.
+Mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
+
+Do NOT try to anticipate every possible pattern. The scaffold grows
+incrementally — the behavioural contract (step 5: GROW) will create
+new patterns from real work as the project evolves. Setup just seeds
+the most critical ones.
 
 After generating patterns, update .mex/patterns/INDEX.md with a row for each
-pattern file you created. For multi-section patterns, add one row per task
-section using anchor links (see INDEX.md annotation for format).
+pattern file you created.
 
 PASS 3 — Wire the web:
 
@@ -328,22 +331,22 @@ Update .mex/AGENTS.md:
 
 PASS 2 — Generate starter patterns:
 
-Now read the .mex/context/ files you just populated — especially architecture.md,
-stack.md, and conventions.md. Then read .mex/patterns/README.md for the format,
-the categories, and the generation rules.
+Read .mex/patterns/README.md for the format and categories.
 
-Walk through every category in .mex/patterns/README.md and generate a pattern file
-for each task type, integration, and failure boundary that applies to this project.
-Do not use a fixed number — generate as many as the project needs.
+Generate 3-5 starter patterns for the most common and most dangerous task
+types in this project. Focus on:
+- The 1-2 tasks a developer does most often (e.g., add endpoint, add component)
+- The 1-2 integrations with the most non-obvious gotchas
+- 1 debug pattern for the most common failure boundary
 
-Each pattern should be:
-- Specific to this project'"'"'s technologies and structure
-- Populated with real gotchas, verify steps, and debug guidance
-  derived from the code you read in Pass 1
-- Named descriptively (e.g., add-api-client.md, debug-pipeline.md)
+Each pattern should be specific to this project — real file paths, real gotchas,
+real verify steps derived from the code you read in Pass 1.
+Use the format in .mex/patterns/README.md. Name descriptively (e.g., add-endpoint.md).
 
-Default to generating a pattern. Only skip if the exact same guidance is already
-in context/conventions.md with examples, or the task has no project-specific gotchas.
+Do NOT try to generate a pattern for every possible task type. The scaffold
+grows incrementally — the behavioural contract (step 5: GROW) will create
+new patterns from real work as the project evolves. Setup just seeds the most
+critical ones.
 
 After generating patterns, update .mex/patterns/INDEX.md with a row for each
 pattern file you created. For multi-section patterns, add one row per task

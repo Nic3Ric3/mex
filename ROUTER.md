@@ -61,5 +61,8 @@ For every task, follow this loop:
 2. **BUILD** — Do the work. If a pattern exists, follow its Steps. If you are about to deviate from an established pattern, say so before writing any code — state the deviation and why.
 3. **VERIFY** — Load `context/conventions.md` and run the Verify Checklist item by item. State each item and whether the output passes. Do not summarise — enumerate explicitly.
 4. **DEBUG** — If verification fails or something breaks, check `patterns/INDEX.md` for a debug pattern. Follow it. Fix the issue and re-run VERIFY.
-
-After completing a task, update the "Current Project State" section above if the work was significant.
+5. **GROW** — After completing the task:
+   - If no pattern exists for this task type, create one in `patterns/` using the format in `patterns/README.md`. Add it to `patterns/INDEX.md`. Flag it: "Created `patterns/<name>.md` from this session."
+   - If a pattern exists but you deviated from it or discovered a new gotcha, update it with what you learned.
+   - If any `context/` file is now out of date because of this work, update it surgically — do not rewrite entire files.
+   - Update the "Current Project State" section above if the work was significant.
