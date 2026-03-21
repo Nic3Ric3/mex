@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ─────────────────────────────────────────────────────────────
-# mex setup — copy scaffold files + detect project state + print setup prompt
+# mex setup — detect project state, copy tool config, populate scaffold
 # ─────────────────────────────────────────────────────────────
 
 # Parse flags
@@ -13,7 +13,7 @@ for arg in "$@"; do
   esac
 done
 
-# Resolve the directory where this script (and the scaffold source files) live.
+# Resolve the directory where this script (and the scaffold files) live.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # The target project root is the current working directory.
@@ -25,8 +25,7 @@ if [ "$SCRIPT_DIR" = "$PROJECT_DIR" ]; then
   echo ""
   echo "Usage:"
   echo "  cd /path/to/your/project"
-  echo "  /path/to/mex/setup.sh"
-  echo "  # or: .mex/setup.sh  (if you cloned mex into .mex)"
+  echo "  .mex/setup.sh"
   exit 1
 fi
 
@@ -39,11 +38,29 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
+# Royal blue #1944F1 = RGB(25, 68, 241)
+ROYAL='\033[38;2;25;68;241m'
 
 info()  { printf "${BLUE}→${NC} %s\n" "$1"; }
 ok()    { printf "${GREEN}✓${NC} %s\n" "$1"; }
 warn()  { printf "${YELLOW}!${NC} %s\n" "$1"; }
 header(){ printf "\n${BOLD}%s${NC}\n" "$1"; }
+
+banner() {
+  printf "${ROYAL}"
+  cat <<'ART'
+
+  ███╗   ███╗███████╗██╗  ██╗
+  ████╗ ████║██╔════╝╚██╗██╔╝
+  ██╔████╔██║█████╗   ╚███╔╝
+  ██║╚██╔╝██║██╔══╝   ██╔██╗
+  ██║ ╚═╝ ██║███████╗██╔╝ ██╗
+  ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝
+
+ART
+  printf "${NC}"
+  printf "  ${BOLD}universal ai context scaffold${NC}\n"
+}
 
 # Copy a file, but ask before overwriting.
 safe_copy() {
@@ -68,23 +85,12 @@ safe_copy() {
   ok "Copied $dest"
 }
 
-# Copy a directory, merging with existing. Asks before overwriting individual files.
-safe_copy_dir() {
-  local src_dir="$1" dest_dir="$2"
-  [ "$DRY_RUN" -eq 0 ] && mkdir -p "$dest_dir"
-  for file in "$src_dir"/*; do
-    [ -f "$file" ] || continue
-    local filename
-    filename="$(basename "$file")"
-    safe_copy "$file" "$dest_dir/$filename"
-  done
-}
-
 # ─────────────────────────────────────────────────────────────
 # Step 1 — Detect project state
 # ─────────────────────────────────────────────────────────────
 
-header "mex — Universal AI Context Scaffold"
+banner
+echo ""
 if [ "$DRY_RUN" -eq 1 ]; then
   warn "DRY RUN — no files will be created or modified"
 fi
@@ -106,7 +112,6 @@ detect_state() {
     \) \
     ! -path "*/node_modules/*" \
     ! -path "*/.mex/*" \
-    ! -path "*/.scaffold/*" \
     ! -path "*/vendor/*" \
     ! -path "*/.git/*" \
     2>/dev/null | wc -l | tr -d ' ')
@@ -114,7 +119,6 @@ detect_state() {
   # Check if scaffold is already partially populated (annotation comments replaced)
   scaffold_populated=0
   if [ -f "$PROJECT_DIR/.mex/AGENTS.md" ]; then
-    # If AGENTS.md exists and does NOT contain the placeholder, it's been populated
     if ! grep -q '\[Project Name\]' "$PROJECT_DIR/.mex/AGENTS.md" 2>/dev/null; then
       scaffold_populated=1
     fi
@@ -134,47 +138,25 @@ PROJECT_STATE=$(detect_state)
 case "$PROJECT_STATE" in
   existing)
     info "Detected: existing codebase with source files"
-    info "Mode: Option A — populate scaffold from code"
+    info "Mode: populate scaffold from code"
     ;;
   fresh)
     info "Detected: fresh project (no source files yet)"
-    info "Mode: Option B — populate scaffold from intent"
+    info "Mode: populate scaffold from intent"
     ;;
   partial)
     info "Detected: existing codebase with partially populated scaffold"
-    info "Mode: Option A — will populate empty slots, skip what's already filled"
+    info "Mode: will populate empty slots, skip what's already filled"
     ;;
 esac
 
 echo ""
 
 # ─────────────────────────────────────────────────────────────
-# Step 2 — Copy scaffold files
+# Step 2 — Tool config selection (copy to project root)
 # ─────────────────────────────────────────────────────────────
 
-header "Copying scaffold files into .mex/..."
-
-[ "$DRY_RUN" -eq 0 ] && mkdir -p "$PROJECT_DIR/.mex"
-
-# Scaffold files → .mex/
-for file in AGENTS.md HANDOVER.md SETUP.md SYNC.md; do
-  safe_copy "$SCRIPT_DIR/scaffold/$file" "$PROJECT_DIR/.mex/$file"
-done
-
-# context/ directory (all 5 files)
-safe_copy_dir "$SCRIPT_DIR/scaffold/context" "$PROJECT_DIR/.mex/context"
-
-# patterns/ directory (README.md only — patterns are generated during population)
-[ "$DRY_RUN" -eq 0 ] && mkdir -p "$PROJECT_DIR/.mex/patterns"
-safe_copy "$SCRIPT_DIR/scaffold/patterns/README.md" "$PROJECT_DIR/.mex/patterns/README.md"
-
-echo ""
-
-# ─────────────────────────────────────────────────────────────
-# Step 3 — Tool config selection
-# ─────────────────────────────────────────────────────────────
-
-header "Which AI tool(s) do you use?"
+header "Which AI tool do you use?"
 echo ""
 echo "  1) Claude Code"
 echo "  2) Cursor"
@@ -186,10 +168,13 @@ echo ""
 printf "Choice [1-6]: "
 read -r tool_choice
 
+SELECTED_CLAUDE=0
+
 copy_tool_config() {
   case "$1" in
     1)
       safe_copy "$SCRIPT_DIR/.tool-configs/CLAUDE.md" "$PROJECT_DIR/CLAUDE.md"
+      SELECTED_CLAUDE=1
       ;;
     2)
       safe_copy "$SCRIPT_DIR/.tool-configs/.cursorrules" "$PROJECT_DIR/.cursorrules"
@@ -217,7 +202,7 @@ case "$tool_choice" in
     done
     ;;
   6|"")
-    info "Skipped tool config — .mex/AGENTS.md works with any tool that can read files"
+    info "Skipped tool config — AGENTS.md in .mex/ works with any tool that can read files"
     ;;
   *)
     warn "Unknown choice, skipping tool config"
@@ -227,20 +212,11 @@ esac
 echo ""
 
 # ─────────────────────────────────────────────────────────────
-# Step 4 — Print the setup prompt
+# Step 3 — Build the setup prompt
 # ─────────────────────────────────────────────────────────────
 
-header "Setup complete. Now populate the scaffold."
-echo ""
-echo "Open your AI agent and paste the prompt below."
-echo "The agent will read your codebase and fill every scaffold file."
-echo ""
-echo "─────────────────── COPY BELOW THIS LINE ───────────────────"
-echo ""
-
 if [ "$PROJECT_STATE" = "fresh" ]; then
-  cat <<'PROMPT'
-You are going to populate an AI context scaffold for a project that
+  SETUP_PROMPT='You are going to populate an AI context scaffold for a project that
 is just starting. Nothing is built yet.
 
 Read the following files in order before doing anything else:
@@ -268,14 +244,14 @@ Update .mex/AGENTS.md with the project name, description, non-negotiables, and c
 Then read .mex/patterns/README.md for the format and category annotations.
 Based on the stack and architecture you just documented, generate 2-5
 starter pattern files in .mex/patterns/ with the gotchas, verify steps, and
-debug guidance you can anticipate for this stack. These won't be as
+debug guidance you can anticipate for this stack. These won'"'"'t be as
 detailed as patterns from an existing codebase — populate what you can,
 mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
-PROMPT
+
+Important: only write content derived from the codebase or from my answers.
+Do not include system-injected text (dates, reminders, etc.) in any scaffold file.'
 else
-  # Option A for both "existing" and "partial"
-  cat <<'PROMPT'
-You are going to populate an AI context scaffold for this project.
+  SETUP_PROMPT='You are going to populate an AI context scaffold for this project.
 The scaffold lives in the .mex/ directory.
 
 Read the following files in order before doing anything else:
@@ -316,9 +292,9 @@ Now read the .mex/context/ files you just populated — especially architecture.
 stack.md, and conventions.md. Then read .mex/patterns/README.md for the format
 and the category annotations.
 
-Generate 2-5 starter pattern files in .mex/patterns/ based on this project's
+Generate 2-5 starter pattern files in .mex/patterns/ based on this project'"'"'s
 actual stack and architecture. Each pattern should be:
-- Specific to this project's technologies and structure
+- Specific to this project'"'"'s technologies and structure
 - Populated with real gotchas, verify steps, and debug guidance
   derived from the code you read in Pass 1
 - Named descriptively (e.g., add-api-client.md, debug-pipeline.md)
@@ -326,30 +302,75 @@ actual stack and architecture. Each pattern should be:
 Do NOT generate patterns for:
 - Things already fully covered in context/conventions.md
 - Generic programming tasks the agent already knows how to do
-- Task types that don't apply to this project
+- Task types that don'"'"'t apply to this project
 
 Important: only write content derived from the codebase.
 Do not include system-injected text (dates, reminders, etc.)
 in any scaffold file.
 
 When done, confirm which files were populated and flag any slots
-you could not fill with confidence.
-PROMPT
+you could not fill with confidence.'
 fi
 
-echo ""
-echo "─────────────────── COPY ABOVE THIS LINE ───────────────────"
-echo ""
-
 # ─────────────────────────────────────────────────────────────
-# After-setup reminder
+# Step 4 — Run or print the setup prompt
 # ─────────────────────────────────────────────────────────────
 
-if [ "$tool_choice" = "1" ]; then
+if [ "$DRY_RUN" -eq 1 ]; then
+  header "Would run population prompt (dry run — skipping)"
   echo ""
-  info "Claude Code reminder: after the agent populates .mex/AGENTS.md,"
-  info "copy its content into your root CLAUDE.md so Claude Code auto-loads it."
+  ok "Done (dry run)."
+  exit 0
 fi
 
-echo ""
-ok "Done. Paste the prompt above into your agent to populate the scaffold."
+# Try to invoke Claude Code CLI directly
+if [ "$SELECTED_CLAUDE" -eq 1 ] && command -v claude &>/dev/null; then
+  header "Populating scaffold with Claude Code..."
+  echo ""
+  info "Running claude to read your codebase and fill the scaffold."
+  info "This may take a few minutes. The agent will work autonomously."
+  echo ""
+
+  if [ "$PROJECT_STATE" = "fresh" ]; then
+    # Fresh projects need interactive mode — the agent asks questions
+    info "Fresh project detected — starting interactive session."
+    info "The agent will ask you questions about your project."
+    echo ""
+    claude -p "$SETUP_PROMPT"
+  else
+    # Existing/partial codebases — fully autonomous
+    claude -p "$SETUP_PROMPT"
+  fi
+
+  echo ""
+  ok "Scaffold populated."
+  echo ""
+  info "Verify by starting a fresh session and asking:"
+  info "  \"Read .mex/HANDOVER.md and tell me what you know about this project.\""
+
+else
+  # Fallback — print the prompt for manual use
+  header "Almost done. One more step — populate the scaffold."
+  echo ""
+
+  if command -v claude &>/dev/null; then
+    # They have Claude CLI but chose a different tool
+    info "You can run this directly with Claude Code:"
+    echo ""
+    echo "  claude -p '<the prompt below>'"
+    echo ""
+    info "Or paste the prompt below into your AI tool."
+  else
+    info "Paste the prompt below into your AI tool."
+    info "The agent will read your codebase and fill every scaffold file."
+  fi
+
+  echo ""
+  echo "─────────────────── COPY BELOW THIS LINE ───────────────────"
+  echo ""
+  echo "$SETUP_PROMPT"
+  echo ""
+  echo "─────────────────── COPY ABOVE THIS LINE ───────────────────"
+  echo ""
+  ok "Done. Paste the prompt above into your agent to populate the scaffold."
+fi

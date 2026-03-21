@@ -100,11 +100,11 @@ The agent read 11 files in the right order. The pattern file told it exactly wha
 
 ```bash
 # From your project root
-git clone <repo-url> .mex-repo
-.mex-repo/setup.sh
+git clone <repo-url> .mex
+.mex/setup.sh
 ```
 
-The script copies scaffold files into `.mex/`, asks which AI tool you use (copies the right config to your project root), and prints the exact prompt to paste into your agent.
+The script detects your project state, asks which AI tool you use, and copies the right config file to your project root. If you selected Claude Code and have the CLI installed, it runs the population prompt directly — no copy-pasting needed. For other tools, it prints the prompt to paste.
 
 Your project ends up with:
 ```
@@ -125,15 +125,12 @@ your-project/
 
 ```bash
 # From your project root
-git clone <repo-url> .mex-repo
-mkdir -p .mex
-cp .mex-repo/scaffold/AGENTS.md .mex-repo/scaffold/HANDOVER.md .mex-repo/scaffold/SETUP.md .mex-repo/scaffold/SYNC.md .mex/
-cp -r .mex-repo/scaffold/context .mex-repo/scaffold/patterns .mex/
+git clone <repo-url> .mex
 
 # Copy your tool config to project root
-cp .mex-repo/.tool-configs/CLAUDE.md ./CLAUDE.md          # Claude Code
-cp .mex-repo/.tool-configs/.cursorrules ./.cursorrules      # Cursor
-cp .mex-repo/.tool-configs/.windsurfrules ./.windsurfrules  # Windsurf
+cp .mex/.tool-configs/CLAUDE.md ./CLAUDE.md          # Claude Code
+cp .mex/.tool-configs/.cursorrules ./.cursorrules      # Cursor
+cp .mex/.tool-configs/.windsurfrules ./.windsurfrules  # Windsurf
 ```
 
 Then open `.mex/SETUP.md`, copy the setup prompt, paste it into your agent.
