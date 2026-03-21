@@ -238,7 +238,20 @@ After I answer, populate the .mex/context/ files based on my answers.
 For any slot you cannot fill yet, write "[TO BE DETERMINED]" and note
 what needs to be decided before it can be filled.
 
+Then assess: based on my answers, does this project have domains complex
+enough that cramming them into architecture.md would make it too long
+or too shallow? If yes, create additional domain-specific context files
+in .mex/context/. Examples: a project with a complex auth system gets
+.mex/context/auth.md. A data pipeline gets .mex/context/ingestion.md.
+A project with Stripe gets .mex/context/payments.md. Use the same YAML
+frontmatter format (name, description, triggers, edges, last_updated).
+Only create these for domains that have real depth — not for simple
+integrations that fit in a few lines of architecture.md. For fresh
+projects, mark domain-specific unknowns with "[TO BE DETERMINED —
+populate after first implementation]".
+
 Update .mex/ROUTER.md current state to reflect that this is a new project.
+Add rows to the routing table for any domain-specific context files you created.
 Update .mex/AGENTS.md with the project name, description, non-negotiables, and commands.
 
 Then read .mex/patterns/README.md for the format, categories, and generation rules.
@@ -296,9 +309,19 @@ For each slot:
   write "[TO DETERMINE]" and explain what information is needed
 - Keep length within the guidance given in each annotation
 
+Then assess: does this project have domains complex enough that cramming
+them into architecture.md would make it too long or too shallow?
+If yes, create additional domain-specific context files in .mex/context/.
+Examples: a project with a complex auth system gets .mex/context/auth.md.
+A data pipeline gets .mex/context/ingestion.md. A project with Stripe gets
+.mex/context/payments.md. Use the same YAML frontmatter format (name,
+description, triggers, edges, last_updated). Only create these for
+domains that have real depth — not for simple integrations that fit
+in a few lines of architecture.md.
+
 After populating .mex/context/ files, update .mex/ROUTER.md:
 - Fill in the Current Project State section based on what you found
-- Verify the routing table covers the main task types for this project
+- Add rows to the routing table for any domain-specific context files you created
 
 Update .mex/AGENTS.md:
 - Fill in the project name, one-line description, non-negotiables, and commands
