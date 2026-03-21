@@ -20,6 +20,7 @@ last_updated: [YYYY-MM-DD]
 ## Core Technologies
 <!-- List the primary language, framework, and runtime.
      For each: version if it matters, any important configuration.
+     Minimum 3 items. If you cannot find 3, write "[TO DETERMINE]".
      Length: 3-7 items.
      Example:
      - **Python 3.11** — primary language
@@ -30,6 +31,7 @@ last_updated: [YYYY-MM-DD]
 <!-- Libraries that are central to how this project works.
      Only include libraries where the agent needs to know: we use THIS, not the alternative.
      Include the reason over alternatives where it matters.
+     Minimum 3 items. If you cannot find 3, write "[TO DETERMINE]".
      Length: 3-10 items.
      Example:
      - **SQLAlchemy** (not raw psycopg2) — ORM for all database access
@@ -39,6 +41,7 @@ last_updated: [YYYY-MM-DD]
 ## What We Deliberately Do NOT Use
 <!-- Technologies or patterns explicitly avoided in this project, and why.
      This prevents the agent from introducing unwanted dependencies.
+     Minimum 2 items. If you cannot find 2, write "[TO DETERMINE]".
      Length: 2-5 items.
      Example:
      - No ORM for raw analytics queries — use psycopg2 directly for performance

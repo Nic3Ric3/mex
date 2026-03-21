@@ -28,6 +28,12 @@ For each context/ file:
 3. Update the file to reflect the current state
 
 Critical rules for updating:
+- Use surgical, targeted edits — NOT full file rewrites. Read the existing content,
+  identify what changed, and update only those sections.
+- PRESERVE YAML frontmatter structure. Never delete or rewrite the entire frontmatter block.
+  Edit individual fields only. The edges, triggers, name, and description fields must
+  survive every sync. If you need to update edges, add or remove individual entries —
+  do not replace the entire array.
 - In context/decisions.md: NEVER delete existing decisions.
   If a decision has changed, mark the old entry as "Superseded by [new decision title]"
   and add the new decision above it with today's date.

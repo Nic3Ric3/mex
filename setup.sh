@@ -249,7 +249,21 @@ detailed as patterns from an existing codebase — populate what you can,
 mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
 
 After generating patterns, update .mex/patterns/INDEX.md with a row for each
-pattern file you created.
+pattern file you created. For multi-section patterns, add one row per task
+section using anchor links (see INDEX.md annotation for format).
+
+PASS 3 — Wire the web:
+
+Re-read every file you just wrote (.mex/context/ files, pattern files, .mex/ROUTER.md).
+For each file, add or update the edges array in the YAML frontmatter.
+Each edge should point to another scaffold file that is meaningfully related,
+with a condition explaining when an agent should follow that edge.
+
+Rules for edges:
+- Every context/ file should have at least 2 edges
+- Every pattern file should have at least 1 edge
+- Edges should be bidirectional where it makes sense
+- Use relative paths (e.g., context/stack.md, patterns/add-endpoint.md)
 
 Important: only write content derived from the codebase or from my answers.
 Do not include system-injected text (dates, reminders, etc.) in any scaffold file.'
@@ -303,12 +317,27 @@ actual stack and architecture. Each pattern should be:
 - Named descriptively (e.g., add-api-client.md, debug-pipeline.md)
 
 After generating patterns, update .mex/patterns/INDEX.md with a row for each
-pattern file you created.
+pattern file you created. For multi-section patterns, add one row per task
+section using anchor links (see INDEX.md annotation for format).
 
 Do NOT generate patterns for:
 - Things already fully covered in context/conventions.md
 - Generic programming tasks the agent already knows how to do
 - Task types that don'"'"'t apply to this project
+
+PASS 3 — Wire the web:
+
+Re-read every file you just wrote (.mex/context/ files, pattern files, .mex/ROUTER.md).
+For each file, add or update the edges array in the YAML frontmatter.
+Each edge should point to another scaffold file that is meaningfully related,
+with a condition explaining when an agent should follow that edge.
+
+Rules for edges:
+- Every context/ file should have at least 2 edges
+- Every pattern file should have at least 1 edge (usually to the relevant context file)
+- Edges should be bidirectional where it makes sense (if A links to B, consider B linking to A)
+- Use relative paths (e.g., context/stack.md, patterns/add-endpoint.md)
+- Pattern files can edge to other patterns (e.g., debug pattern → related task pattern)
 
 Important: only write content derived from the codebase.
 Do not include system-injected text (dates, reminders, etc.)

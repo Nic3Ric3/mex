@@ -22,7 +22,7 @@ last_updated: [YYYY-MM-DD]
      Focus on FLOW not technology — how does a request/action move through the system?
      Use the actual names of components, services, and modules from this codebase.
      Format: a simple text flow diagram or short prose description.
-     Length: 5-15 lines. Should be readable in 30 seconds.
+     Length: 5-15 lines. Minimum 5 lines. Should be readable in 30 seconds.
      Example:
      "Request comes in via Express router → validated by middleware →
      passed to service layer → service calls repository for data →
@@ -33,6 +33,7 @@ last_updated: [YYYY-MM-DD]
 <!-- List the major components, modules, or services in this project.
      For each: name, what it does, what it depends on.
      Only include components that are non-obvious or have important constraints.
+     Minimum 3 components. If you cannot identify 3, write "[TO DETERMINE]" as a placeholder.
      Length: 1-2 lines per component.
      Example:
      - **AuthService** — handles all authentication logic, depends on UserRepository and JWTLib
@@ -41,6 +42,7 @@ last_updated: [YYYY-MM-DD]
 ## External Dependencies
 <!-- Third-party services, APIs, or databases this project connects to.
      For each: what it is, what we use it for, any important constraints.
+     Minimum 3 items. If you cannot find 3, write "[TO DETERMINE]" as a placeholder.
      Length: 1-2 lines per dependency.
      Example:
      - **PostgreSQL** — primary database, all writes go through the repository layer only
@@ -49,6 +51,7 @@ last_updated: [YYYY-MM-DD]
 ## What Does NOT Exist Here
 <!-- Explicit boundaries — what is deliberately outside this system.
      This prevents the agent from building things that belong elsewhere or making wrong assumptions.
+     Minimum 2 items. If you cannot find 2, write "[TO DETERMINE]" as a placeholder.
      Length: 2-5 items.
      Example:
      - No background job processing — that lives in the worker service (separate repo)

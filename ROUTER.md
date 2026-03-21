@@ -59,6 +59,6 @@ These rules apply in every session, for every task:
 
 1. **Narrate navigation.** When you load a context file, say so explicitly: "Loading architecture context..." This keeps the developer informed and prevents silent context gaps.
 2. **Check patterns first.** Before starting any task, check `patterns/INDEX.md` for a matching pattern. If one exists, follow it.
-3. **Show verification.** After completing a task, explicitly check your output against `context/conventions.md`. State what you checked.
+3. **Show verification.** After completing a task, load `context/conventions.md` and run the Verify Checklist item by item. State each item and whether the output passes. Do not summarise — enumerate explicitly.
 4. **Flag deviations.** If you are about to do something that deviates from an established pattern in this codebase, say so before writing any code. State the deviation and why.
 5. **Update state.** When significant work completes, update the "Current Project State" section above.

@@ -20,6 +20,7 @@ last_updated: [YYYY-MM-DD]
 <!-- How things are named in this codebase.
      Cover: files, functions, variables, classes, database tables/columns — whichever are non-obvious.
      Only include conventions that are actually enforced, not aspirational.
+     Minimum 3 items. If you cannot find 3, write "[TO DETERMINE]" — do not pad with generic advice.
      Length: 3-7 items.
      Example:
      - Files: kebab-case (`user-profile.ts`, not `UserProfile.ts`)
@@ -29,6 +30,7 @@ last_updated: [YYYY-MM-DD]
 ## Structure
 <!-- How code is organised within files and across the codebase.
      Cover the things the agent is most likely to get wrong.
+     Minimum 3 items. If you cannot find 3, write "[TO DETERMINE]" — do not pad with generic advice.
      Length: 3-7 items.
      Example:
      - Business logic lives in services/, never in route handlers
@@ -38,6 +40,7 @@ last_updated: [YYYY-MM-DD]
 ## Patterns
 <!-- Recurring code patterns that must be followed consistently.
      Include concrete before/after examples for the most important ones.
+     Minimum 2 patterns. If you cannot find 2, write "[TO DETERMINE]".
      Length: 2-5 patterns with examples.
      Example:
      Always use the Result type for error handling — never throw from the service layer:
@@ -54,6 +57,7 @@ last_updated: [YYYY-MM-DD]
 <!-- A short checklist the agent runs against any code it writes in this project.
      These are the things most likely to go wrong based on this specific codebase.
      The agent should explicitly check each item before presenting output.
+     Minimum 4 items. If you cannot find 4, write "[TO DETERMINE]".
      Length: 4-8 items.
      Example:
      Before presenting any code:

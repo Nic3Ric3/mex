@@ -29,6 +29,8 @@ last_updated: [YYYY-MM-DD]
      Include decisions that: are non-obvious, have important constraints,
      or where the reasoning prevents future mistakes.
      Do not document every decision — only ones where "why" matters.
+     Minimum 3 decision entries during initial population. If you cannot identify 3,
+     write placeholder entries with "[TO DETERMINE]" and explain what decision is pending.
 
      Format for each entry:
 
@@ -48,4 +50,16 @@ last_updated: [YYYY-MM-DD]
      **Decision:** All persistent data lives in PostgreSQL, no secondary databases.
      **Reasoning:** Simplicity — one database to operate, backup, and reason about.
      **Alternatives considered:** Redis for sessions (rejected — adds operational complexity for minimal gain), MongoDB for user preferences (rejected — relational model fits our data).
-     **Consequences:** No caching layer at database level. Application-level caching if needed. -->
+     **Consequences:** No caching layer at database level. Application-level caching if needed.
+
+     Example of a superseded entry:
+
+     ### Use Redis for session storage
+     **Date:** 2024-02-15
+     **Status:** Superseded by "Use PostgreSQL for all persistent storage"
+     **Decision:** Store user sessions in Redis.
+     **Reasoning:** Fast read/write for session data.
+     **Alternatives considered:** PostgreSQL (chosen later due to operational simplicity).
+     **Consequences:** ~~Requires Redis infrastructure alongside PostgreSQL.~~
+     **Superseded because:** Maintaining two data stores added operational complexity
+     without meaningful performance benefit for our scale. -->

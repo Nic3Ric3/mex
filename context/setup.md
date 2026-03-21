@@ -8,6 +8,11 @@ triggers:
   - "getting started"
   - "how do I run"
   - "local development"
+edges:
+  - target: context/stack.md
+    condition: when specific technology versions or library details are needed
+  - target: context/architecture.md
+    condition: when understanding how components connect during setup
 last_updated: [YYYY-MM-DD]
 ---
 
@@ -16,6 +21,7 @@ last_updated: [YYYY-MM-DD]
 ## Prerequisites
 <!-- What must be installed before anything else.
      Include exact versions if they matter.
+     Minimum 2 items. If you cannot find 2, write "[TO DETERMINE]".
      Length: 2-5 items.
      Example:
      - Node.js 20+
@@ -25,6 +31,7 @@ last_updated: [YYYY-MM-DD]
 ## First-time Setup
 <!-- Exact steps to go from clone to running. In order.
      Use the actual commands from this project. No placeholders.
+     Minimum 3 steps. If you cannot find 3, write "[TO DETERMINE]".
      Length: 3-7 steps.
      Example:
      1. `pnpm install`
@@ -46,6 +53,7 @@ last_updated: [YYYY-MM-DD]
 
 ## Common Commands
 <!-- The commands used daily. Already in AGENTS.md but repeated here with more detail.
+     Minimum 4 commands. If you cannot find 4, write "[TO DETERMINE]".
      Length: 4-8 commands.
      Example:
      - `pnpm dev` — starts dev server on port 3000 with hot reload
@@ -57,6 +65,7 @@ last_updated: [YYYY-MM-DD]
 ## Common Issues
 <!-- The things that go wrong most often and how to fix them.
      Only include issues that have actually occurred — not hypothetical problems.
+     Minimum 2 items. If you cannot find 2, write "[TO DETERMINE]".
      Length: 2-5 issues.
      Example:
      **Port already in use:** `lsof -i :3000` to find the process, `kill -9 [PID]`

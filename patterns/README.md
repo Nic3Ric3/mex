@@ -25,7 +25,7 @@ A pattern file is worth creating when:
 
 ## Format
 
-Every pattern file follows this structure:
+### Single-task pattern (one file = one task)
 
 ```markdown
 ---
@@ -33,6 +33,9 @@ name: [pattern-name]
 description: [one line — what this pattern covers and when to use it]
 triggers:
   - "[keyword that should trigger loading this file]"
+edges:
+  - target: "[related file path, e.g. context/conventions.md]"
+    condition: "[when to follow this edge]"
 last_updated: [YYYY-MM-DD]
 ---
 
@@ -53,6 +56,48 @@ last_updated: [YYYY-MM-DD]
 ## Debug
 [What to check when this task type breaks]
 ```
+
+### Multi-section pattern (one file = multiple related tasks)
+
+Use this when tasks share context but differ in steps. Each task gets its own
+`## Task: ...` heading with sub-sections. The Context section is shared at the top.
+
+```markdown
+---
+name: [pattern-name]
+description: [one line — what this pattern file covers]
+triggers:
+  - "[keyword]"
+edges:
+  - target: "[related file path]"
+    condition: "[when to follow this edge]"
+last_updated: [YYYY-MM-DD]
+---
+
+# [Pattern Name]
+
+## Context
+[Shared context for all tasks in this file]
+
+## Task: [First Task Name]
+
+### Steps
+[...]
+
+### Gotchas
+[...]
+
+### Verify
+[...]
+
+## Task: [Second Task Name]
+
+### Steps
+[...]
+```
+
+Do NOT combine unrelated tasks into one file just to reduce file count.
+Only group tasks that genuinely share context.
 
 ## Pattern categories to consider
 
