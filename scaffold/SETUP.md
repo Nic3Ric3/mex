@@ -130,10 +130,10 @@ mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
 
 ## After Setup
 
-**If using Claude Code:** Copy the populated AGENTS.md content into your root CLAUDE.md — it should match, since CLAUDE.md is the always-loaded entry point for Claude Code. The scaffold ships a template CLAUDE.md, but after setup it should contain the same content as your populated AGENTS.md.
+**If using Claude Code:** Copy the populated `.mex/AGENTS.md` content into your root `CLAUDE.md` — it should match, since CLAUDE.md is the always-loaded entry point for Claude Code.
 
 **Verify** by starting a fresh session and asking your agent:
-"Read HANDOVER.md and tell me what you now know about this project."
+"Read `.mex/HANDOVER.md` and tell me what you now know about this project."
 
 A well-populated scaffold should give the agent enough to:
 - Describe the architecture without looking at code

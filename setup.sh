@@ -113,9 +113,9 @@ detect_state() {
 
   # Check if scaffold is already partially populated (annotation comments replaced)
   scaffold_populated=0
-  if [ -f "$PROJECT_DIR/AGENTS.md" ]; then
+  if [ -f "$PROJECT_DIR/.mex/AGENTS.md" ]; then
     # If AGENTS.md exists and does NOT contain the placeholder, it's been populated
-    if ! grep -q '\[Project Name\]' "$PROJECT_DIR/AGENTS.md" 2>/dev/null; then
+    if ! grep -q '\[Project Name\]' "$PROJECT_DIR/.mex/AGENTS.md" 2>/dev/null; then
       scaffold_populated=1
     fi
   fi
@@ -152,19 +152,21 @@ echo ""
 # Step 2 — Copy scaffold files
 # ─────────────────────────────────────────────────────────────
 
-header "Copying scaffold files..."
+header "Copying scaffold files into .mex/..."
 
-# Root files
+[ "$DRY_RUN" -eq 0 ] && mkdir -p "$PROJECT_DIR/.mex"
+
+# Scaffold files → .mex/
 for file in AGENTS.md HANDOVER.md SETUP.md SYNC.md; do
-  safe_copy "$SCRIPT_DIR/$file" "$PROJECT_DIR/$file"
+  safe_copy "$SCRIPT_DIR/scaffold/$file" "$PROJECT_DIR/.mex/$file"
 done
 
 # context/ directory (all 5 files)
-safe_copy_dir "$SCRIPT_DIR/context" "$PROJECT_DIR/context"
+safe_copy_dir "$SCRIPT_DIR/scaffold/context" "$PROJECT_DIR/.mex/context"
 
 # patterns/ directory (README.md only — patterns are generated during population)
-[ "$DRY_RUN" -eq 0 ] && mkdir -p "$PROJECT_DIR/patterns"
-safe_copy "$SCRIPT_DIR/patterns/README.md" "$PROJECT_DIR/patterns/README.md"
+[ "$DRY_RUN" -eq 0 ] && mkdir -p "$PROJECT_DIR/.mex/patterns"
+safe_copy "$SCRIPT_DIR/scaffold/patterns/README.md" "$PROJECT_DIR/.mex/patterns/README.md"
 
 echo ""
 
@@ -215,7 +217,7 @@ case "$tool_choice" in
     done
     ;;
   6|"")
-    info "Skipped tool config — AGENTS.md in the project root works with any tool"
+    info "Skipped tool config — .mex/AGENTS.md works with any tool that can read files"
     ;;
   *)
     warn "Unknown choice, skipping tool config"
@@ -242,8 +244,8 @@ You are going to populate an AI context scaffold for a project that
 is just starting. Nothing is built yet.
 
 Read the following files in order before doing anything else:
-1. HANDOVER.md — understand the scaffold structure
-2. All files in context/ — read the annotation comments in each
+1. .mex/HANDOVER.md — understand the scaffold structure
+2. All files in .mex/context/ — read the annotation comments in each
 
 Then ask me the following questions one section at a time.
 Wait for my answer before moving to the next section:
@@ -256,16 +258,16 @@ Wait for my answer before moving to the next section:
 6. What patterns do you want to enforce from day one?
 7. What are you deliberately NOT building or using?
 
-After I answer, populate the context/ files based on my answers.
+After I answer, populate the .mex/context/ files based on my answers.
 For any slot you cannot fill yet, write "[TO BE DETERMINED]" and note
 what needs to be decided before it can be filled.
 
-Update HANDOVER.md current state to reflect that this is a new project.
-Update AGENTS.md with the project name, description, non-negotiables, and commands.
+Update .mex/HANDOVER.md current state to reflect that this is a new project.
+Update .mex/AGENTS.md with the project name, description, non-negotiables, and commands.
 
-Then read patterns/README.md for the format and category annotations.
+Then read .mex/patterns/README.md for the format and category annotations.
 Based on the stack and architecture you just documented, generate 2-5
-starter pattern files in patterns/ with the gotchas, verify steps, and
+starter pattern files in .mex/patterns/ with the gotchas, verify steps, and
 debug guidance you can anticipate for this stack. These won't be as
 detailed as patterns from an existing codebase — populate what you can,
 mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
@@ -274,15 +276,15 @@ else
   # Option A for both "existing" and "partial"
   cat <<'PROMPT'
 You are going to populate an AI context scaffold for this project.
-The scaffold lives in the root of this repository.
+The scaffold lives in the .mex/ directory.
 
 Read the following files in order before doing anything else:
-1. HANDOVER.md — understand the scaffold structure
-2. context/architecture.md — read the annotation comments to understand what belongs there
-3. context/stack.md — same
-4. context/conventions.md — same
-5. context/decisions.md — same
-6. context/setup.md — same
+1. .mex/HANDOVER.md — understand the scaffold structure
+2. .mex/context/architecture.md — read the annotation comments to understand what belongs there
+3. .mex/context/stack.md — same
+4. .mex/context/conventions.md — same
+5. .mex/context/decisions.md — same
+6. .mex/context/setup.md — same
 
 Then explore this codebase:
 - Read the main entry point(s)
@@ -292,7 +294,7 @@ Then explore this codebase:
 
 PASS 1 — Populate knowledge files:
 
-Populate each context/ file by replacing the annotation comments
+Populate each .mex/context/ file by replacing the annotation comments
 with real content from this codebase. Follow the annotation instructions exactly.
 For each slot:
 - Use the actual names, patterns, and structures from this codebase
@@ -301,20 +303,20 @@ For each slot:
   write "[TO DETERMINE]" and explain what information is needed
 - Keep length within the guidance given in each annotation
 
-After populating context/ files, update HANDOVER.md:
+After populating .mex/context/ files, update .mex/HANDOVER.md:
 - Fill in the Current Project State section based on what you found
 - Verify the routing table covers the main task types for this project
 
-Update AGENTS.md:
+Update .mex/AGENTS.md:
 - Fill in the project name, one-line description, non-negotiables, and commands
 
 PASS 2 — Generate starter patterns:
 
-Now read the context/ files you just populated — especially architecture.md,
-stack.md, and conventions.md. Then read patterns/README.md for the format
+Now read the .mex/context/ files you just populated — especially architecture.md,
+stack.md, and conventions.md. Then read .mex/patterns/README.md for the format
 and the category annotations.
 
-Generate 2-5 starter pattern files in patterns/ based on this project's
+Generate 2-5 starter pattern files in .mex/patterns/ based on this project's
 actual stack and architecture. Each pattern should be:
 - Specific to this project's technologies and structure
 - Populated with real gotchas, verify steps, and debug guidance
@@ -345,8 +347,8 @@ echo ""
 
 if [ "$tool_choice" = "1" ]; then
   echo ""
-  info "Claude Code reminder: after the agent populates AGENTS.md,"
-  info "copy its content into CLAUDE.md so Claude Code auto-loads it."
+  info "Claude Code reminder: after the agent populates .mex/AGENTS.md,"
+  info "copy its content into your root CLAUDE.md so Claude Code auto-loads it."
 fi
 
 echo ""

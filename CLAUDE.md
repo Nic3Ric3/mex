@@ -32,5 +32,5 @@ last_updated: [YYYY-MM-DD]
      - Build: `npm run build` -->
 
 ## Navigation
-At the start of every session, read `HANDOVER.md` before doing anything else.
+At the start of every session, read `.mex/HANDOVER.md` before doing anything else.
 For full project context, patterns, and task guidance — everything is there.

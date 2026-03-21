@@ -1,7 +1,7 @@
 # Tool Configuration Files
 
 These files make the scaffold work with specific AI coding tools.
-All contain the same content — a pointer to HANDOVER.md.
+All contain the same content — a pointer to `.mex/HANDOVER.md`.
 
 ## Which file does your tool use?
 
@@ -11,7 +11,7 @@ All contain the same content — a pointer to HANDOVER.md.
 | Cursor | `.cursorrules` → copy or symlink to project root |
 | Windsurf | `.windsurfrules` → copy or symlink to project root |
 | GitHub Copilot | `copilot-instructions.md` → copy to `.github/` in project root |
-| Any other tool | Use `AGENTS.md` in the project root (already there) |
+| Any other tool | Point agent to `.mex/AGENTS.md` |
 
 ## Setup
 
@@ -33,10 +33,10 @@ mkdir -p .github && cp .tool-configs/copilot-instructions.md ./.github/copilot-i
 
 ## If your tool is not listed
 
-Add "Read HANDOVER.md before starting any task" to your tool's system prompt
+Add "Read .mex/HANDOVER.md before starting any task" to your tool's system prompt
 or paste it at the start of each session. The scaffold works identically.
 
 ## Content
 
-All files contain identical content — the Circle 1 anchor from AGENTS.md.
-AGENTS.md is the source of truth. If you update AGENTS.md, update these too.
+All files contain identical content — the Circle 1 anchor from `.mex/AGENTS.md`.
+`.mex/AGENTS.md` is the source of truth. If you update it, update your root tool config too.

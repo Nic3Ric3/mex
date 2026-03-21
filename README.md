@@ -100,31 +100,47 @@ The agent read 11 files in the right order. The pattern file told it exactly wha
 
 ```bash
 # From your project root
-git clone <repo-url> .mex
-.mex/setup.sh
+git clone <repo-url> .mex-repo
+.mex-repo/setup.sh
 ```
 
-The script detects your project state (existing/fresh/partial), copies scaffold files, asks which AI tool you use, and prints the exact prompt to paste into your agent.
+The script copies scaffold files into `.mex/`, asks which AI tool you use (copies the right config to your project root), and prints the exact prompt to paste into your agent.
+
+Your project ends up with:
+```
+your-project/
+├── CLAUDE.md          ← tool config (auto-loaded, points to .mex/)
+├── .mex/              ← all scaffold files, contained
+│   ├── AGENTS.md
+│   ├── HANDOVER.md
+│   ├── SETUP.md
+│   ├── SYNC.md
+│   ├── context/
+│   └── patterns/
+├── src/
+└── ...
+```
 
 ### Option B — Manual setup
 
 ```bash
 # From your project root
-git clone <repo-url> .mex
-cp -r .mex/AGENTS.md .mex/HANDOVER.md .mex/SETUP.md .mex/SYNC.md .
-cp -r .mex/context .mex/patterns .
+git clone <repo-url> .mex-repo
+mkdir -p .mex
+cp .mex-repo/scaffold/AGENTS.md .mex-repo/scaffold/HANDOVER.md .mex-repo/scaffold/SETUP.md .mex-repo/scaffold/SYNC.md .mex/
+cp -r .mex-repo/scaffold/context .mex-repo/scaffold/patterns .mex/
 
-# Copy your tool config
-cp .mex/.tool-configs/CLAUDE.md ./CLAUDE.md          # Claude Code
-cp .mex/.tool-configs/.cursorrules ./.cursorrules      # Cursor
-cp .mex/.tool-configs/.windsurfrules ./.windsurfrules  # Windsurf
+# Copy your tool config to project root
+cp .mex-repo/.tool-configs/CLAUDE.md ./CLAUDE.md          # Claude Code
+cp .mex-repo/.tool-configs/.cursorrules ./.cursorrules      # Cursor
+cp .mex-repo/.tool-configs/.windsurfrules ./.windsurfrules  # Windsurf
 ```
 
-Then open `SETUP.md`, copy the setup prompt, paste it into your agent.
+Then open `.mex/SETUP.md`, copy the setup prompt, paste it into your agent.
 
 ### Verify
 
-Ask your agent: *"Read HANDOVER.md and tell me what you know about this project."*
+Ask your agent: *"Read `.mex/HANDOVER.md` and tell me what you know about this project."*
 
 If it can describe your architecture, name your services, and explain your conventions — the scaffold is working.
 
@@ -133,22 +149,22 @@ If it can describe your architecture, name your services, and explain your conve
 ```
 Session starts
     ↓
-Agent loads AGENTS.md (auto-loaded by tool, or pasted by developer)
+Agent loads CLAUDE.md (auto-loaded by tool, lives at project root)
     ↓
-AGENTS.md → "Read HANDOVER.md at session start"
+CLAUDE.md → "Read .mex/HANDOVER.md at session start"
     ↓
-HANDOVER.md → routing table → loads relevant context/ file for this task
+HANDOVER.md → routing table → loads relevant .mex/context/ file for this task
     ↓
-context/ file → points to patterns/ if task-specific wisdom exists
+context/ file → points to .mex/patterns/ if task-specific wisdom exists
     ↓
 Agent executes with full project context, minimal token cost
 ```
 
 ## File Types
 
-### Type 1 — Knowledge Files (`context/`)
+### Type 1 — Knowledge Files (`.mex/context/`)
 
-Facts about the project. Architecture, stack, conventions, decisions, setup. Populated by the agent reading your codebase. Updated via `SYNC.md` when things change.
+Facts about the project. Architecture, stack, conventions, decisions, setup. Populated by the agent reading your codebase. Updated via `.mex/SYNC.md` when things change.
 
 | File | Contains |
 |------|----------|
@@ -158,9 +174,9 @@ Facts about the project. Architecture, stack, conventions, decisions, setup. Pop
 | `decisions.md` | Key decisions with reasoning (event clock, never overwritten) |
 | `setup.md` | How to run this project locally |
 
-### Type 2 — Pattern Files (`patterns/`)
+### Type 2 — Pattern Files (`.mex/patterns/`)
 
-The things you would tell your agent if you were sitting next to it. Gotchas, verify checklists, debug trees. Added by you over time as patterns emerge. See `patterns/README.md` for the format.
+The things you would tell your agent if you were sitting next to it. Gotchas, verify checklists, debug trees. Added by you over time as patterns emerge. See `.mex/patterns/README.md` for the format.
 
 ### Root Files
 
@@ -181,7 +197,7 @@ Small project? CLAUDE.md is all you need. Put your conventions in there, done.
 
 But once your project has 10+ services, multiple API clients, a deployment pipeline, and conventions that vary by layer — you hit a wall. Either CLAUDE.md becomes a 2000-line doc that burns tokens and dilutes attention, or you keep it short and the agent misses things.
 
-mex keeps CLAUDE.md short (~120 tokens) and turns it into a *pointer*: "Read HANDOVER.md before doing anything." From there, the agent navigates to only the context it needs. Your CLAUDE.md stays lean. Your agent stays informed.
+mex keeps CLAUDE.md short (~120 tokens) and turns it into a *pointer*: "Read `.mex/HANDOVER.md` before doing anything." From there, the agent navigates to only the context it needs. Your CLAUDE.md stays lean. Your agent stays informed.
 
 **Use CLAUDE.md alone when:** your project is small, conventions are simple, one file covers it.
 
@@ -197,7 +213,7 @@ About 5 minutes. Clone, copy files, paste the setup prompt. The agent does the r
 
 ### What if my codebase changes?
 
-Run the SYNC.md prompt. The agent compares the scaffold to the current codebase and updates what has drifted. Decisions are never deleted — superseded entries preserve the reasoning history.
+Run the `.mex/SYNC.md` prompt. The agent compares the scaffold to the current codebase and updates what has drifted. Decisions are never deleted — superseded entries preserve the reasoning history.
 
 ## Multi-Tool Compatibility
 
