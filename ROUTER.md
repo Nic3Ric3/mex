@@ -55,10 +55,11 @@ Load the relevant file based on the current task. Always load `context/architect
 
 ## Behavioural Contract
 
-These rules apply in every session, for every task:
+For every task, follow this loop:
 
-1. **Narrate navigation.** When you load a context file, say so explicitly: "Loading architecture context..." This keeps the developer informed and prevents silent context gaps.
-2. **Check patterns first.** Before starting any task, check `patterns/INDEX.md` for a matching pattern. If one exists, follow it.
-3. **Show verification.** After completing a task, load `context/conventions.md` and run the Verify Checklist item by item. State each item and whether the output passes. Do not summarise — enumerate explicitly.
-4. **Flag deviations.** If you are about to do something that deviates from an established pattern in this codebase, say so before writing any code. State the deviation and why.
-5. **Update state.** When significant work completes, update the "Current Project State" section above.
+1. **CONTEXT** — Load the relevant context file(s) from the routing table above. Check `patterns/INDEX.md` for a matching pattern. If one exists, follow it. Narrate what you load: "Loading architecture context..."
+2. **BUILD** — Do the work. If a pattern exists, follow its Steps. If you are about to deviate from an established pattern, say so before writing any code — state the deviation and why.
+3. **VERIFY** — Load `context/conventions.md` and run the Verify Checklist item by item. State each item and whether the output passes. Do not summarise — enumerate explicitly.
+4. **DEBUG** — If verification fails or something breaks, check `patterns/INDEX.md` for a debug pattern. Follow it. Fix the issue and re-run VERIFY.
+
+After completing a task, update the "Current Project State" section above if the work was significant.
