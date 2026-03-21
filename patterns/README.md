@@ -16,12 +16,13 @@ A pattern file is worth creating when:
 - Something broke and you want to prevent it from breaking the same way again
 - A verify checklist specific to one type of task would catch mistakes early
 
-## What does NOT belong here
+## When to skip a pattern
 
-- Generic programming advice the agent already knows
-- Things already covered in `context/conventions.md`
-- Step-by-step instructions for things that are obvious from the code
-- Patterns that don't apply to this project's stack
+Default to generating a pattern. Only skip if:
+- The exact same guidance is already in `context/conventions.md` with concrete examples
+- The task truly has no project-specific gotchas (e.g. "how to write a for loop")
+
+If in doubt, generate the pattern. A pattern that turns out to be obvious costs nothing. A missing pattern costs a broken codebase.
 
 ## Format
 
@@ -99,36 +100,61 @@ last_updated: [YYYY-MM-DD]
 Do NOT combine unrelated tasks into one file just to reduce file count.
 Only group tasks that genuinely share context.
 
-## Pattern categories to consider
+## How many patterns to generate
 
-<!-- The setup agent uses these categories to decide which starter patterns to generate.
-     Not every project needs all of these. Generate only what applies to THIS project's
-     stack and architecture. Aim for 2-5 starter patterns.
+Do not use a fixed number. Generate one pattern per:
+- Each major task type a developer does repeatedly in this project
+- Each external dependency with non-obvious integration gotchas
+- Each major failure boundary in the architecture flow
 
-     Category 1 — Common task patterns
-     The repeatable tasks in this project. What does a developer do most often?
-     Examples by project type:
-     - API: "add new endpoint", "add new model/entity"
-     - Frontend: "add new page/route", "add new component"
-     - CLI: "add new command", "add new flag/option"
-     - Pipeline: "add new pipeline stage", "add new data source"
-     Derive from: context/architecture.md (what are the major components?) and
-     context/conventions.md (what patterns exist for extending them?)
+For a simple project this may be 3-4 files. For a complex project this may be 10-15.
+Do not cap based on a number — cap based on whether the pattern adds real value.
 
-     Category 2 — Integration patterns
-     How to work with the external dependencies in this project.
-     Every entry in context/stack.md "Key Libraries" or architecture.md "External Dependencies"
-     that has non-obvious setup, gotchas, or failure modes deserves a pattern.
-     Examples: "calling the payments API", "running database migrations",
-     "adding a new third-party service client"
+## Pattern categories
 
-     Category 3 — Debug/diagnosis patterns
-     When something breaks, where do you look? Derive from the architecture flow —
-     each boundary between components is a potential failure point.
-     Examples: "debug webhook failures", "debug pipeline stage failures",
-     "diagnose auth/permission issues"
+Walk through each category below. For each one, check the relevant context files
+and generate patterns for everything that applies to this project.
 
-     Category 4 — Deploy/release patterns
-     If the project has deployment steps that aren't fully automated or have gotchas.
-     Only generate if context/setup.md reveals non-trivial deployment.
-     Examples: "deploy to staging", "rollback a release", "update environment config" -->
+### Category 1 — Common task patterns
+
+The repeatable tasks in this project. What does a developer do most often?
+
+Derive from: `context/architecture.md` (what are the major components?) and
+`context/conventions.md` (what patterns exist for extending them?)
+
+Examples by project type:
+- API: "add new endpoint", "add new model/entity", "add auth to a route"
+- Frontend: "add new page/route", "add new component", "add form with validation"
+- CLI: "add new command", "add new flag/option"
+- Pipeline: "add new pipeline stage", "add new data source"
+- SaaS: "add payment flow", "add user-facing feature", "add admin operation"
+
+### Category 2 — Integration patterns
+
+How to work with the external dependencies in this project.
+
+Every entry in `context/stack.md` "Key Libraries" or `context/architecture.md`
+"External Dependencies" that has non-obvious setup, gotchas, or failure modes
+deserves a pattern. These are the most dangerous areas — the agent will
+confidently write integration code that looks right but misses project-specific
+configuration, error handling, or rate limiting.
+
+Examples: "calling the payments API", "running database migrations",
+"adding a new third-party service client", "configuring auth provider"
+
+### Category 3 — Debug/diagnosis patterns
+
+When something breaks, where do you look?
+
+Derive from the architecture flow — each boundary between components is a
+potential failure point. One debug pattern per major boundary.
+
+Examples: "debug webhook failures", "debug pipeline stage failures",
+"diagnose auth/permission issues", "debug background job failures"
+
+### Category 4 — Deploy/release patterns
+
+Only generate if `context/setup.md` reveals non-trivial deployment.
+
+Examples: "deploy to staging", "rollback a release", "update environment config",
+"run database migration in production"

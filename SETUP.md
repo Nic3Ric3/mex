@@ -59,24 +59,25 @@ Update AGENTS.md:
 PASS 2 — Generate starter patterns:
 
 Now read the context/ files you just populated — especially architecture.md,
-stack.md, and conventions.md. Then read patterns/README.md for the format
-and the category annotations.
+stack.md, and conventions.md. Then read patterns/README.md for the format,
+the categories, and the generation rules.
 
-Generate 2-5 starter pattern files in patterns/ based on this project's
-actual stack and architecture. Each pattern should be:
+Walk through every category in patterns/README.md and generate a pattern file
+for each task type, integration, and failure boundary that applies to this project.
+Do not use a fixed number — generate as many as the project needs.
+
+Each pattern should be:
 - Specific to this project's technologies and structure
 - Populated with real gotchas, verify steps, and debug guidance
   derived from the code you read in Pass 1
 - Named descriptively (e.g., add-api-client.md, debug-pipeline.md)
 
+Default to generating a pattern. Only skip if the exact same guidance is already
+in context/conventions.md with examples, or the task has no project-specific gotchas.
+
 After generating patterns, update patterns/INDEX.md with a row for each
 pattern file you created. For multi-section patterns, add one row per task
 section using anchor links (see INDEX.md annotation for format).
-
-Do NOT generate patterns for:
-- Things already fully covered in context/conventions.md
-- Generic programming tasks the agent already knows how to do
-- Task types that don't apply to this project
 
 PASS 3 — Wire the web:
 
@@ -136,12 +137,12 @@ what needs to be decided before it can be filled.
 Update ROUTER.md current state to reflect that this is a new project.
 Update AGENTS.md with the project name, description, non-negotiables, and commands.
 
-Then read patterns/README.md for the format and category annotations.
-Based on the stack and architecture you just documented, generate 2-5
-starter pattern files in patterns/ with the gotchas, verify steps, and
-debug guidance you can anticipate for this stack. These won't be as
-detailed as patterns from an existing codebase — populate what you can,
-mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
+Then read patterns/README.md for the format, categories, and generation rules.
+Walk through every category and generate a pattern file for each task type,
+integration, and failure boundary you can anticipate for this stack.
+Do not use a fixed number — generate as many as the project needs.
+These won't be as detailed as patterns from an existing codebase — populate
+what you can, mark unknowns with "[VERIFY AFTER FIRST IMPLEMENTATION]".
 
 After generating patterns, update patterns/INDEX.md with a row for each
 pattern file you created. For multi-section patterns, add one row per task
