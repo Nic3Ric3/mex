@@ -212,7 +212,29 @@ esac
 echo ""
 
 # ─────────────────────────────────────────────────────────────
-# Step 3 — Build the setup prompt
+# Step 3 — Pre-analyze codebase (if mex CLI available)
+# ─────────────────────────────────────────────────────────────
+
+SCANNER_BRIEF=""
+if [ "$PROJECT_STATE" != "fresh" ]; then
+  # Try mex CLI first (installed globally or locally)
+  if command -v mex &>/dev/null; then
+    info "Running mex pre-analysis scanner..."
+    SCANNER_BRIEF=$(cd "$PROJECT_DIR" && mex init --json 2>/dev/null) || SCANNER_BRIEF=""
+  elif [ -f "$SCRIPT_DIR/dist/cli.js" ]; then
+    info "Running mex pre-analysis scanner..."
+    SCANNER_BRIEF=$(cd "$PROJECT_DIR" && node "$SCRIPT_DIR/dist/cli.js" init --json 2>/dev/null) || SCANNER_BRIEF=""
+  fi
+
+  if [ -n "$SCANNER_BRIEF" ]; then
+    ok "Pre-analysis complete — AI will reason from brief instead of exploring (~5-8k tokens vs ~50k)"
+  else
+    warn "Pre-analysis unavailable — AI will explore the filesystem directly"
+  fi
+fi
+
+# ─────────────────────────────────────────────────────────────
+# Step 4 — Build the setup prompt
 # ─────────────────────────────────────────────────────────────
 
 if [ "$PROJECT_STATE" = "fresh" ]; then
@@ -284,7 +306,32 @@ Rules for edges:
 Important: only write content derived from the codebase or from my answers.
 Do not include system-injected text (dates, reminders, etc.) in any scaffold file.'
 else
-  SETUP_PROMPT='You are going to populate an AI context scaffold for this project.
+  if [ -n "$SCANNER_BRIEF" ]; then
+    # Brief-based prompt — AI reasons from pre-analyzed data
+    SETUP_PROMPT="You are going to populate an AI context scaffold for this project.
+The scaffold lives in the .mex/ directory.
+
+Read the following files in order before doing anything else:
+1. .mex/ROUTER.md — understand the scaffold structure
+2. .mex/context/architecture.md — read the annotation comments to understand what belongs there
+3. .mex/context/stack.md — same
+4. .mex/context/conventions.md — same
+5. .mex/context/decisions.md — same
+6. .mex/context/setup.md — same
+
+Here is a pre-analyzed brief of the codebase — do NOT explore the filesystem
+yourself for basic structure. Reason from this brief for dependencies, entry
+points, tooling, and folder layout. You may still read specific files when
+you need to understand implementation details for patterns or architecture.
+
+<brief>
+${SCANNER_BRIEF}
+</brief>
+
+PASS 1 — Populate knowledge files:"
+  else
+    # Fallback — AI explores the filesystem directly
+    SETUP_PROMPT='You are going to populate an AI context scaffold for this project.
 The scaffold lives in the .mex/ directory.
 
 Read the following files in order before doing anything else:
@@ -301,7 +348,11 @@ Then explore this codebase:
 - Read 2-3 representative files from each major layer
 - Read any existing README or documentation
 
-PASS 1 — Populate knowledge files:
+PASS 1 — Populate knowledge files:'
+  fi
+
+  # The rest of the prompt is shared between brief and fallback modes
+  SETUP_PROMPT="${SETUP_PROMPT}
 
 Populate each .mex/context/ file by replacing the annotation comments
 with real content from this codebase. Follow the annotation instructions exactly.
@@ -309,7 +360,7 @@ For each slot:
 - Use the actual names, patterns, and structures from this codebase
 - Do not use generic examples
 - Do not leave any slot empty — if you cannot determine the answer,
-  write "[TO DETERMINE]" and explain what information is needed
+  write \"[TO DETERMINE]\" and explain what information is needed
 - Keep length within the guidance given in each annotation
 
 Then assess: does this project have domains complex enough that cramming
@@ -371,11 +422,11 @@ Do not include system-injected text (dates, reminders, etc.)
 in any scaffold file.
 
 When done, confirm which files were populated and flag any slots
-you could not fill with confidence.'
+you could not fill with confidence."
 fi
 
 # ─────────────────────────────────────────────────────────────
-# Step 4 — Run or print the setup prompt
+# Step 5 — Run or print the setup prompt
 # ─────────────────────────────────────────────────────────────
 
 if [ "$DRY_RUN" -eq 1 ]; then
