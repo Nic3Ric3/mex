@@ -1631,31 +1631,61 @@ function runNavSimulation(query, data) {
     }
   }
 
-  // Build the path
-  const target = routeMatch || conditionMatch || triggerMatch;
+  // Build the full navigation path
+  // Step 2: find the context file from routing table or edge conditions
+  const contextTarget = routeMatch || conditionMatch;
 
-  if (target) {
-    steps.push({ nodeId: target, message: 'Routing to ' + target + '...' });
+  if (!contextTarget && !triggerMatch) {
+    steps.push({ nodeId: null, message: 'No matching route found for "' + query + '"' });
+  } else if (contextTarget) {
+    // Standard path: ROUTER → context file → INDEX → pattern
+    steps.push({ nodeId: contextTarget, message: 'Loading ' + contextTarget + '...' });
 
-    // Check if target has triggers matching a pattern
-    if (triggerMatch && triggerMatch !== target) {
-      steps.push({ nodeId: triggerMatch, message: 'Found pattern: ' + triggerMatch });
+    // Step 3: check conventions too if we're writing code and didn't already route there
+    if (contextTarget !== 'context/conventions.md' &&
+        keywords.some(kw => ['write', 'add', 'create', 'build', 'implement', 'new', 'endpoint', 'route', 'component', 'feature'].includes(kw))) {
+      steps.push({ nodeId: 'context/conventions.md', message: 'Loading conventions for code writing...' });
     }
 
-    // Check patterns/INDEX.md routing
-    if (target === 'patterns/INDEX.md') {
-      // Look for pattern files that match
-      for (const node of data.nodes) {
-        if (node.type === 'pattern' && node.id !== 'patterns/INDEX.md' && node.id !== 'patterns/README.md') {
-          if (node.triggers && node.triggers.some(t => keywords.some(kw => t.toLowerCase().includes(kw)))) {
-            steps.push({ nodeId: node.id, message: 'Found pattern: ' + node.id });
-            break;
-          }
+    // Step 4: always check pattern index
+    steps.push({ nodeId: 'patterns/INDEX.md', message: 'Checking pattern index...' });
+
+    // Step 5: find a matching pattern file
+    let matchedPattern = null;
+    for (const node of data.nodes) {
+      if (node.type === 'pattern' && node.id !== 'patterns/INDEX.md' && node.id !== 'patterns/README.md') {
+        const nameMatch = keywords.some(kw => node.id.toLowerCase().includes(kw));
+        const trigMatch = node.triggers && node.triggers.some(t => keywords.some(kw => t.toLowerCase().includes(kw)));
+        const descMatch = node.description && keywords.some(kw => node.description.toLowerCase().includes(kw));
+        if (nameMatch || trigMatch || descMatch) {
+          matchedPattern = node.id;
+          break;
         }
       }
     }
-  } else {
-    steps.push({ nodeId: null, message: 'No matching route found' });
+
+    if (matchedPattern) {
+      steps.push({ nodeId: matchedPattern, message: 'Found pattern: ' + matchedPattern + ' — following it' });
+    } else {
+      steps.push({ nodeId: 'patterns/INDEX.md', message: 'No specific pattern found — agent proceeds with context' });
+      // Remove duplicate INDEX step
+      steps.splice(steps.length - 2, 1);
+    }
+  } else if (triggerMatch) {
+    // Direct trigger match (e.g. typed a keyword that matches a specific file)
+    // Still go through the proper chain
+    const trigNode = data.nodes.find(n => n.id === triggerMatch);
+    if (trigNode && trigNode.type === 'context') {
+      steps.push({ nodeId: triggerMatch, message: 'Loading ' + triggerMatch + ' (trigger match)...' });
+      steps.push({ nodeId: 'patterns/INDEX.md', message: 'Checking pattern index...' });
+    } else if (trigNode && trigNode.type === 'pattern') {
+      // Pattern trigger — still load context first
+      steps.push({ nodeId: 'context/conventions.md', message: 'Loading conventions first...' });
+      steps.push({ nodeId: 'patterns/INDEX.md', message: 'Checking pattern index...' });
+      steps.push({ nodeId: triggerMatch, message: 'Found pattern: ' + triggerMatch + ' — following it' });
+    } else {
+      steps.push({ nodeId: triggerMatch, message: 'Routing to ' + triggerMatch + '...' });
+    }
   }
 
   // Render narration and animate
