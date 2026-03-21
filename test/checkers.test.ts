@@ -1,0 +1,242 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import {
+  mkdtempSync,
+  writeFileSync,
+  mkdirSync,
+  rmSync,
+} from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+import { checkPaths } from "../src/drift/checkers/path.js";
+import { checkEdges } from "../src/drift/checkers/edges.js";
+import { checkCommands } from "../src/drift/checkers/command.js";
+import { checkDependencies } from "../src/drift/checkers/dependency.js";
+import { checkCrossFile } from "../src/drift/checkers/cross-file.js";
+import { checkIndexSync } from "../src/drift/checkers/index-sync.js";
+import type { Claim, ScaffoldFrontmatter } from "../src/types.js";
+
+let tmpDir: string;
+
+beforeEach(() => {
+  tmpDir = mkdtempSync(join(tmpdir(), "mex-checker-"));
+});
+
+afterEach(() => {
+  rmSync(tmpDir, { recursive: true, force: true });
+});
+
+function claim(overrides: Partial<Claim> & { kind: Claim["kind"]; value: string }): Claim {
+  return {
+    source: "test.md",
+    line: 1,
+    section: null,
+    negated: false,
+    ...overrides,
+  };
+}
+
+// ── Path Checker ──
+
+describe("checkPaths", () => {
+  it("reports missing paths", () => {
+    const claims = [claim({ kind: "path", value: "src/missing.ts" })];
+    const issues = checkPaths(claims, tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("MISSING_PATH");
+  });
+
+  it("passes for existing paths", () => {
+    mkdirSync(join(tmpDir, "src"), { recursive: true });
+    writeFileSync(join(tmpDir, "src/index.ts"), "");
+    const claims = [claim({ kind: "path", value: "src/index.ts" })];
+    const issues = checkPaths(claims, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("skips negated claims", () => {
+    const claims = [
+      claim({ kind: "path", value: "src/missing.ts", negated: true }),
+    ];
+    const issues = checkPaths(claims, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("resolves .mex/ prefixed paths to root", () => {
+    writeFileSync(join(tmpDir, "ROUTER.md"), "# Router");
+    const claims = [claim({ kind: "path", value: ".mex/ROUTER.md" })];
+    const issues = checkPaths(claims, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+// ── Edges Checker ──
+
+describe("checkEdges", () => {
+  it("reports dead edge targets", () => {
+    const fm: ScaffoldFrontmatter = {
+      edges: [{ target: "context/missing.md" }],
+    };
+    const issues = checkEdges(fm, "router.md", "ROUTER.md", tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("DEAD_EDGE");
+  });
+
+  it("passes for existing edge targets", () => {
+    mkdirSync(join(tmpDir, "context"), { recursive: true });
+    writeFileSync(join(tmpDir, "context/arch.md"), "");
+    const fm: ScaffoldFrontmatter = {
+      edges: [{ target: "context/arch.md" }],
+    };
+    const issues = checkEdges(fm, "router.md", "ROUTER.md", tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("returns empty for no frontmatter", () => {
+    expect(checkEdges(null, "f", "f", tmpDir)).toEqual([]);
+  });
+
+  it("returns empty for no edges", () => {
+    expect(checkEdges({ name: "test" }, "f", "f", tmpDir)).toEqual([]);
+  });
+});
+
+// ── Command Checker ──
+
+describe("checkCommands", () => {
+  it("reports dead npm scripts", () => {
+    writeFileSync(
+      join(tmpDir, "package.json"),
+      JSON.stringify({ scripts: { build: "tsc" } })
+    );
+    const claims = [claim({ kind: "command", value: "npm run test" })];
+    const issues = checkCommands(claims, tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("DEAD_COMMAND");
+  });
+
+  it("passes for existing npm scripts", () => {
+    writeFileSync(
+      join(tmpDir, "package.json"),
+      JSON.stringify({ scripts: { build: "tsc", test: "vitest" } })
+    );
+    const claims = [
+      claim({ kind: "command", value: "npm run build" }),
+      claim({ kind: "command", value: "npm run test" }),
+    ];
+    const issues = checkCommands(claims, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("reports dead make targets", () => {
+    writeFileSync(join(tmpDir, "Makefile"), "build:\n\tgcc main.c\n");
+    const claims = [claim({ kind: "command", value: "make deploy" })];
+    const issues = checkCommands(claims, tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("DEAD_COMMAND");
+  });
+
+  it("skips when no manifest exists", () => {
+    const claims = [claim({ kind: "command", value: "npm run build" })];
+    const issues = checkCommands(claims, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+// ── Dependency Checker ──
+
+describe("checkDependencies", () => {
+  it("reports missing dependencies", () => {
+    writeFileSync(
+      join(tmpDir, "package.json"),
+      JSON.stringify({ dependencies: { express: "^4.18.0" } })
+    );
+    const claims = [claim({ kind: "dependency", value: "Prisma" })];
+    const issues = checkDependencies(claims, tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("DEPENDENCY_MISSING");
+  });
+
+  it("passes for existing dependencies (case-insensitive)", () => {
+    writeFileSync(
+      join(tmpDir, "package.json"),
+      JSON.stringify({ dependencies: { express: "^4.18.0" } })
+    );
+    const claims = [claim({ kind: "dependency", value: "Express" })];
+    const issues = checkDependencies(claims, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("returns empty when no manifest exists", () => {
+    const claims = [claim({ kind: "dependency", value: "Express" })];
+    const issues = checkDependencies(claims, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+// ── Cross-file Checker ──
+
+describe("checkCrossFile", () => {
+  it("detects conflicting versions across files", () => {
+    const claims = [
+      claim({ kind: "version", value: "React 18", source: "stack.md" }),
+      claim({ kind: "version", value: "React 17", source: "arch.md" }),
+    ];
+    const issues = checkCrossFile(claims);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("CROSS_FILE_CONFLICT");
+  });
+
+  it("no conflict for same version across files", () => {
+    const claims = [
+      claim({ kind: "version", value: "React 18", source: "stack.md" }),
+      claim({ kind: "version", value: "React 18", source: "arch.md" }),
+    ];
+    const issues = checkCrossFile(claims);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+// ── Index Sync Checker ──
+
+describe("checkIndexSync", () => {
+  it("reports orphan entries in INDEX.md", () => {
+    mkdirSync(join(tmpDir, "patterns"), { recursive: true });
+    writeFileSync(
+      join(tmpDir, "patterns/INDEX.md"),
+      "| [missing.md](missing.md) | A pattern |"
+    );
+    const issues = checkIndexSync(tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("INDEX_ORPHAN_ENTRY");
+  });
+
+  it("reports pattern files missing from INDEX", () => {
+    mkdirSync(join(tmpDir, "patterns"), { recursive: true });
+    writeFileSync(join(tmpDir, "patterns/INDEX.md"), "# Index\n\nEmpty.");
+    writeFileSync(join(tmpDir, "patterns/auth.md"), "# Auth pattern");
+    const issues = checkIndexSync(tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("INDEX_MISSING_ENTRY");
+  });
+
+  it("passes when INDEX and files match", () => {
+    mkdirSync(join(tmpDir, "patterns"), { recursive: true });
+    writeFileSync(
+      join(tmpDir, "patterns/INDEX.md"),
+      "| [auth.md](auth.md) | Auth pattern |"
+    );
+    writeFileSync(join(tmpDir, "patterns/auth.md"), "# Auth");
+    const issues = checkIndexSync(tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("ignores references inside HTML comments", () => {
+    mkdirSync(join(tmpDir, "patterns"), { recursive: true });
+    writeFileSync(
+      join(tmpDir, "patterns/INDEX.md"),
+      "<!-- [example.md](example.md) is a template -->\n\n| Pattern | Use when |\n|---|---|"
+    );
+    const issues = checkIndexSync(tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+});
