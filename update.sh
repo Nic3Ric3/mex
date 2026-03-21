@@ -57,6 +57,7 @@ ART
 INFRA_FILES=(
   "setup.sh"
   "update.sh"
+  "sync.sh"
   "visualize.sh"
   "SETUP.md"
   "SYNC.md"
@@ -156,6 +157,7 @@ done
 # Preserve executable permissions on scripts
 chmod +x "$SCRIPT_DIR/setup.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/update.sh" 2>/dev/null || true
+chmod +x "$SCRIPT_DIR/sync.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/visualize.sh" 2>/dev/null || true
 
 echo ""
