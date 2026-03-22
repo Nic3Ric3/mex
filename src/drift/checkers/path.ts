@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
+import { globSync } from "glob";
 import type { Claim, DriftIssue } from "../../types.js";
 
 const PLACEHOLDER_WORDS = /(?:^|[/_-])(?:new|example|your|sample|my|foo|bar|placeholder|template)(?:[/_.-]|$)/i;
@@ -52,6 +53,16 @@ function pathExists(value: string, projectRoot: string, scaffoldRoot: string): b
   if (value.startsWith(".mex/")) {
     const withoutPrefix = value.slice(".mex/".length);
     if (existsSync(resolve(projectRoot, withoutPrefix))) return true;
+  }
+
+  // Bare filenames: search recursively — the file may exist in a subdirectory
+  if (!value.includes("/")) {
+    const matches = globSync(`**/${value}`, {
+      cwd: projectRoot,
+      ignore: ["node_modules/**", ".mex/**", "dist/**", ".git/**"],
+      maxDepth: 5,
+    });
+    if (matches.length > 0) return true;
   }
 
   return false;
