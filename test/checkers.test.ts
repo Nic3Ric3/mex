@@ -97,7 +97,19 @@ describe("checkPaths", () => {
     }
   });
 
-  it("keeps error severity for real missing paths", () => {
+  it("downgrades to warning for bare filenames", () => {
+    const claims = [
+      claim({ kind: "path", value: "conversation_state.py", source: "context/architecture.md" }),
+      claim({ kind: "path", value: "server.py", source: "context/architecture.md" }),
+    ];
+    const issues = checkPaths(claims, tmpDir, tmpDir);
+    expect(issues).toHaveLength(2);
+    for (const issue of issues) {
+      expect(issue.severity).toBe("warning");
+    }
+  });
+
+  it("keeps error severity for real missing paths with directories", () => {
     const claims = [claim({ kind: "path", value: "src/auth/handler.ts", source: "context/architecture.md" })];
     const issues = checkPaths(claims, tmpDir, tmpDir);
     expect(issues).toHaveLength(1);

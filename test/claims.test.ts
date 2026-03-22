@@ -94,14 +94,16 @@ describe("extractClaims — paths", () => {
     expect(paths).toHaveLength(0);
   });
 
-  it("skips bare filenames without directory separators", () => {
+  it("extracts bare filenames as path claims", () => {
     const path = writeFixture(
       "test.md",
       "# Files\n\nSee `pipeline.py` and `server.py` for details."
     );
     const claims = extractClaims(path, "test.md");
     const paths = claims.filter((c) => c.kind === "path");
-    expect(paths).toHaveLength(0);
+    expect(paths).toHaveLength(2);
+    expect(paths.map((p) => p.value)).toContain("pipeline.py");
+    expect(paths.map((p) => p.value)).toContain("server.py");
   });
 
   it("still extracts paths with directory separators", () => {

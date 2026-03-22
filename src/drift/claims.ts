@@ -24,11 +24,6 @@ function isNotAPath(value: string): boolean {
   // Wildcard prefixes like *_streaming_client.py — patterns, not real paths
   if (value.startsWith("*")) return true;
 
-  // Bare filenames without a directory (e.g. `pipeline.py`, `server.py`) are typically
-  // mentions/references in prose, not path claims that should be validated.
-  // Only treat as a path if it contains a `/` (directory separator).
-  if (!value.includes("/") && KNOWN_EXTENSIONS.test(value)) return true;
-
   return false;
 }
 
