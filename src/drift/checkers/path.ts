@@ -2,6 +2,8 @@ import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Claim, DriftIssue } from "../../types.js";
 
+const PLACEHOLDER_WORDS = /(?:^|[/_-])(?:new|example|your|sample|my|foo|bar|placeholder|template)(?:[/_.-]|$)/i;
+
 /** Check that all claimed paths exist on disk */
 export function checkPaths(
   claims: Claim[],
@@ -16,9 +18,14 @@ export function checkPaths(
   for (const claim of pathClaims) {
     if (pathExists(claim.value, projectRoot, scaffoldRoot)) continue;
 
+    // Downgrade to warning if: from a pattern file, or path contains placeholder words
+    const isPattern = claim.source.includes("patterns/");
+    const isPlaceholder = PLACEHOLDER_WORDS.test(claim.value);
+    const severity = isPattern || isPlaceholder ? "warning" : "error";
+
     issues.push({
       code: "MISSING_PATH",
-      severity: "error",
+      severity,
       file: claim.source,
       line: claim.line,
       message: `Referenced path does not exist: ${claim.value}`,

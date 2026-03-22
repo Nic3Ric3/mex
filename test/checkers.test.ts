@@ -76,6 +76,33 @@ describe("checkPaths", () => {
     const issues = checkPaths(claims, tmpDir, mexDir);
     expect(issues).toHaveLength(0);
   });
+
+  it("downgrades to warning for paths from pattern files", () => {
+    const claims = [claim({ kind: "path", value: "src/missing.ts", source: "patterns/add-feature.md" })];
+    const issues = checkPaths(claims, tmpDir, tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
+
+  it("downgrades to warning for paths with placeholder words", () => {
+    const claims = [
+      claim({ kind: "path", value: "api_clients/new_service_client.py" }),
+      claim({ kind: "path", value: "src/example_module.ts" }),
+      claim({ kind: "path", value: "lib/your_config.json" }),
+    ];
+    const issues = checkPaths(claims, tmpDir, tmpDir);
+    expect(issues).toHaveLength(3);
+    for (const issue of issues) {
+      expect(issue.severity).toBe("warning");
+    }
+  });
+
+  it("keeps error severity for real missing paths", () => {
+    const claims = [claim({ kind: "path", value: "src/auth/handler.ts", source: "context/architecture.md" })];
+    const issues = checkPaths(claims, tmpDir, tmpDir);
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("error");
+  });
 });
 
 // ── Edges Checker ──
