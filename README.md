@@ -1,57 +1,79 @@
-# mex — Universal AI Context Scaffold
+<div align="center">
 
-A structured context system for AI coding agents. Clone it into your project, run the setup prompt, and your agent gets persistent project knowledge, structured navigation, and drift prevention — for any codebase, any stack.
+```
+  ███╗   ███╗███████╗██╗  ██╗
+  ████╗ ████║██╔════╝╚██╗██╔╝
+  ██╔████╔██║█████╗   ╚███╔╝
+  ██║╚██╔╝██║██╔══╝   ██╔██╗
+  ██║ ╚═╝ ██║███████╗██╔╝ ██╗
+  ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝
+```
 
-## The Problem
+**mex**
 
-AI coding agents have three failure modes:
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-1. **Session amnesia** — every session starts cold. The agent forgets past decisions, conventions, and context.
-2. **Context flooding** — to compensate, developers dump everything into CLAUDE.md or system prompts. Token costs explode, attention degrades.
-3. **Drift** — over time, the agent's understanding of your codebase diverges from reality. Small deviations compound.
+</div>
 
-Most solutions address one of these. CLAUDE.md fixes amnesia but creates flooding. RAG systems fix flooding but don't prevent drift. Nothing connects them.
+---
 
-## Pave the Road
+AI agents forget everything between sessions. mex gives them permanent, navigable project memory.
 
-Think of your codebase as a city and your AI agent as a new driver.
+Every session starts cold. The agent has no idea what it built yesterday, what conventions you agreed on, or what broke last week. Developers compensate by stuffing everything into CLAUDE.md — but that floods the context window, burns tokens, and degrades attention. Meanwhile, the project changes and nobody updates the docs. The agent's understanding drifts from reality.
 
-**Without a scaffold**, you hand the driver a 50-page document every trip. It contains every street name, every speed limit, every construction zone, every local custom. The driver reads the whole thing before turning the key. Most of it is irrelevant to today's route. Some of it is out of date.
+mex is a structured markdown scaffold with a CLI that keeps it honest. The scaffold gives agents persistent project knowledge through navigable files — architecture, conventions, decisions, patterns. The CLI detects when those files drift from the actual codebase, and targets AI to fix only what's broken.
 
-**With CLAUDE.md alone**, you highlight the important parts. Better — but it's still one document, and when the road changes, nobody updates the map.
+## Install
 
-**With mex**, you pave actual roads. The driver starts at a known intersection (ROUTER.md), checks the routing table for today's destination, and follows signs to the relevant context. The roads exist whether or not the driver has been here before. When construction happens, drift detection flags the broken roads before anyone drives on them.
+```bash
+git clone https://github.com/theDakshJaitly/mex.git .mex
+bash .mex/setup.sh
+```
 
-The scaffold isn't documentation. It's infrastructure.
+The setup script auto-builds the CLI, pre-scans your codebase, and runs a targeted prompt to populate the scaffold. Takes about 5 minutes.
 
-## How This Is Different
+## Drift Detection
 
-CLAUDE.md and AGENTS.md solve **context injection** — getting information into the agent. mex solves **context navigation** — the agent traverses a structured graph to find exactly what it needs for each task, instead of loading everything or guessing.
+Seven checkers validate your scaffold against the real codebase. Zero tokens, zero AI.
 
-| | CLAUDE.md alone | mex |
-|---|---|---|
-| **What the agent knows at session start** | Everything in the file (or nothing) | A 120-token anchor that says "read ROUTER.md" |
-| **How context scales** | File grows until attention degrades | Agent navigates to only the context it needs |
-| **What happens after a refactor** | Manual edits or stale docs | `mex check` detects drift, `mex sync` fixes it |
-| **Task-specific guidance** | Generic rules for all tasks | Pattern files loaded per task type |
-| **Decision history** | Overwritten or forgotten | Append-only log with reasoning preserved |
+| Checker | What it catches |
+|---------|----------------|
+| **path** | Referenced file paths that don't exist on disk |
+| **edges** | YAML frontmatter edge targets pointing to missing files |
+| **index-sync** | `patterns/INDEX.md` out of sync with actual pattern files |
+| **staleness** | Scaffold files not updated in 30+ days or 50+ commits |
+| **command** | `npm run X` / `make X` referencing scripts that don't exist |
+| **dependency** | Claimed dependencies missing from `package.json` |
+| **cross-file** | Same dependency with different versions across files |
 
-AGENTS.md is one section of this scaffold. We extend the standard, not replace it.
+Scoring: starts at 100. Deducts -10 per error, -3 per warning, -1 per info.
+
+## CLI Commands
+
+| Command | What it does |
+|---------|-------------|
+| `mex check` | Run all 7 checkers, output drift score and issues |
+| `mex check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
+| `mex check --json` | Full report as JSON for programmatic use |
+| `mex init` | Pre-scan codebase, build structured brief for AI |
+| `mex init --json` | Raw scanner brief as JSON |
+| `mex sync` | Detect drift → build per-file prompts → AI fixes → verify |
+| `mex sync --dry-run` | Preview targeted prompts without executing |
+| `mex watch` | Install post-commit hook for automatic drift score |
+| `mex watch --uninstall` | Remove the hook |
 
 ## Before / After
 
-Real output from testing mex on [Agrow](https://github.com/), an AI-powered agricultural voice helpline (Python/Flask, Twilio, multi-provider AI pipeline).
+Real output from testing mex on [Agrow](https://github.com/), an AI-powered agricultural voice helpline (Python/Flask, Twilio, multi-provider pipeline).
 
-### ROUTER.md — empty scaffold vs. populated
-
-**Before** (what you clone):
+**Scaffold before setup:**
 ```markdown
 ## Current Project State
 <!-- What is working. What is not yet built. Known issues.
      Update this section whenever significant work is completed. -->
 ```
 
-**After** (what the agent writes after reading your codebase):
+**Scaffold after setup:**
 ```markdown
 ## Current Project State
 
@@ -60,7 +82,6 @@ Real output from testing mex on [Agrow](https://github.com/), an AI-powered agri
 - Multi-provider STT (ElevenLabs, Deepgram) with configurable selection
 - RAG system with Supabase pgvector for agricultural knowledge retrieval
 - Streaming pipeline with barge-in support
-- Location capture and soil test agency lookup
 
 **Not yet built:**
 - Admin dashboard for call monitoring
@@ -71,164 +92,13 @@ Real output from testing mex on [Agrow](https://github.com/), an AI-powered agri
 - Sarvam AI STT bypass active — routing to ElevenLabs as fallback
 ```
 
-### patterns/ — empty scaffold vs. populated
-
-**Before:** An empty directory with a format guide.
-
-**After** (agent generates starter patterns from your actual stack):
+**Patterns directory after setup:**
 ```
 patterns/
-├── add-api-client.md      # Steps, gotchas, verify checklist for adding a new service client
-├── add-language-support.md # How to extend the 8-language voice pipeline
-├── debug-pipeline.md       # Where to look when a call fails at each pipeline stage
-└── add-rag-documents.md    # How to ingest new agricultural knowledge into pgvector
-```
-
-### Cold bootstrap — what actually happens
-
-We gave a fresh agent (no prior context) this task: *"Add a new API client for Deepgram batch transcription."*
-
-**Without mex:** Agent reads some files, writes a client that works but doesn't match existing patterns, misses config injection, skips rate limiting.
-
-**With mex:** Agent automatically reads ROUTER.md → routes to `context/conventions.md` → finds `patterns/add-api-client.md` → follows the step-by-step → produces a client that matches existing structure, uses `AppConfig` injection, includes rate limit config, and passes the conventions verify checklist.
-
-The agent read 11 files in the right order. The pattern file told it exactly what to do. Zero guidance from the developer.
-
-## Getting Started
-
-### Option A — Setup script (recommended)
-
-```bash
-# From your project root
-git clone https://github.com/theDakshJaitly/mex.git .mex
-.mex/setup.sh
-```
-
-The script detects your project state, asks which AI tool you use, and copies the right config file to your project root. It pre-scans your codebase to build a structured brief (~5-8k tokens instead of ~50k from AI exploration), then runs the population prompt. If you selected Claude Code and have the CLI installed, it runs directly — no copy-pasting needed.
-
-Your project ends up with:
-```
-your-project/
-├── CLAUDE.md          ← tool config (auto-loaded, points to .mex/)
-├── .mex/              ← all scaffold files, contained
-│   ├── AGENTS.md
-│   ├── ROUTER.md
-│   ├── SETUP.md
-│   ├── SYNC.md
-│   ├── context/
-│   └── patterns/
-├── src/
-└── ...
-```
-
-### Option B — Manual setup
-
-```bash
-# From your project root
-git clone https://github.com/theDakshJaitly/mex.git .mex
-
-# Copy your tool config to project root
-cp .mex/.tool-configs/CLAUDE.md ./CLAUDE.md          # Claude Code
-cp .mex/.tool-configs/.cursorrules ./.cursorrules      # Cursor
-cp .mex/.tool-configs/.windsurfrules ./.windsurfrules  # Windsurf
-```
-
-Then open `.mex/SETUP.md`, copy the setup prompt, paste it into your agent.
-
-### Verify
-
-Ask your agent: *"Read `.mex/ROUTER.md` and tell me what you know about this project."*
-
-If it can describe your architecture, name your services, and explain your conventions — the scaffold is working.
-
-## CLI Engine
-
-mex includes a TypeScript CLI that handles deterministic work so AI only fires when reasoning is required.
-
-### Install
-
-```bash
-cd .mex && npm install && npm run build
-```
-
-Or if you want it globally accessible:
-
-```bash
-cd .mex && npm install && npm run build && npm link
-```
-
-### Commands
-
-#### `mex check` — Drift Detection
-
-Scans all scaffold files and validates claims against the actual codebase. Zero tokens, zero AI.
-
-```bash
-mex check              # Full report grouped by file, colored by severity
-mex check --quiet      # One-liner: "mex: drift score 85/100 (1 error, 2 warnings)"
-mex check --json       # Full DriftReport as JSON for programmatic use
-```
-
-Seven checkers run in sequence:
-
-| Checker | What it catches |
-|---------|----------------|
-| **path** | Referenced file paths that don't exist on disk |
-| **edges** | YAML frontmatter edge targets that don't exist |
-| **index-sync** | patterns/INDEX.md out of sync with actual pattern files |
-| **staleness** | Scaffold files not updated in 30+ days or 50+ commits |
-| **command** | `npm run X` / `make X` commands that don't exist in manifests |
-| **dependency** | Claimed dependencies not found in package.json / manifests |
-| **cross-file** | Same dependency with different versions across files |
-
-Scoring: starts at 100, deducts -10 per error, -3 per warning, -1 per info.
-
-#### `mex init` — Pre-analysis Scanner
-
-Extracts codebase structure before AI fires. Replaces the ~50k token "explore the filesystem" step with a ~5-8k token structured brief.
-
-```bash
-mex init --json        # Raw scanner brief (manifest, entry points, folders, tooling)
-mex init               # Full AI prompt with brief embedded
-```
-
-The scanner detects:
-- **Manifest**: dependencies, versions, scripts from package.json / pyproject.toml / go.mod / Cargo.toml
-- **Entry points**: main files, test files, config files
-- **Folder tree**: categorized directories with file counts
-- **Tooling**: test runner, build tool, linter, formatter, package manager
-- **README**: existing documentation content
-
-This is automatically wired into `setup.sh` — no manual step needed.
-
-#### `mex sync` — Targeted Sync
-
-Runs drift detection, then builds per-file prompts for AI to fix only what's broken.
-
-```bash
-mex sync --dry-run     # Preview: show targeted prompts without executing
-mex sync               # Run: detect → brief → AI fix → verify
-```
-
-Or use the interactive script:
-
-```bash
-.mex/sync.sh           # Menu: targeted sync, full resync, prompt export, or exit
-.mex/sync.sh --dry-run # Preview mode
-```
-
-#### `mex watch` — Auto Drift Check
-
-Installs a post-commit git hook that shows drift score after every commit.
-
-```bash
-mex watch              # Install hook
-mex watch --uninstall  # Remove hook
-```
-
-After each commit you'll see:
-```
-mex: drift score 92/100 (1 warning)
+├── add-api-client.md       # Steps, gotchas, verify checklist for new service clients
+├── add-language-support.md  # How to extend the 8-language voice pipeline
+├── debug-pipeline.md        # Where to look when a call fails at each stage
+└── add-rag-documents.md     # How to ingest new agricultural knowledge
 ```
 
 ## How It Works
@@ -236,98 +106,59 @@ mex: drift score 92/100 (1 warning)
 ```
 Session starts
     ↓
-Agent loads CLAUDE.md (auto-loaded by tool, lives at project root)
+Agent loads CLAUDE.md (auto-loaded, lives at project root)
     ↓
-CLAUDE.md → "Read .mex/ROUTER.md at session start"
+CLAUDE.md says "Read .mex/ROUTER.md before doing anything"
     ↓
-ROUTER.md → routing table → loads relevant .mex/context/ file for this task
+ROUTER.md routing table → loads relevant context file for this task
     ↓
-context/ file → points to .mex/patterns/ if task-specific wisdom exists
+context file → points to pattern file if task-specific guidance exists
     ↓
 Agent executes with full project context, minimal token cost
 ```
 
-## File Types
+CLAUDE.md stays at ~120 tokens. The agent navigates to only what it needs.
 
-### Type 1 — Knowledge Files (`.mex/context/`)
+## File Structure
 
-Facts about the project. Architecture, stack, conventions, decisions, setup. Populated by the agent reading your codebase. Updated via `mex sync` or `.mex/SYNC.md` when things change.
-
-| File | Contains |
-|------|----------|
-| `architecture.md` | How the major pieces connect and flow |
-| `stack.md` | Technology choices and reasoning |
-| `conventions.md` | How code is written here — naming, structure, patterns |
-| `decisions.md` | Key decisions with reasoning (event clock, never overwritten) |
-| `setup.md` | How to run this project locally |
-
-### Type 2 — Pattern Files (`.mex/patterns/`)
-
-The things you would tell your agent if you were sitting next to it. Gotchas, verify checklists, debug trees. Added by you over time as patterns emerge. See `.mex/patterns/README.md` for the format.
-
-### Root Files
-
-| File | Purpose |
-|------|---------|
-| `AGENTS.md` | Always-loaded anchor (~150 tokens) |
-| `ROUTER.md` | Session bootstrap, routing table, behavioural contract |
-| `SETUP.md` | Population prompt — how to fill the scaffold |
-| `SYNC.md` | Resync prompt — how to realign after drift |
-
-### Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `setup.sh` | First-time setup — detect state, copy config, run population prompt |
-| `sync.sh` | Interactive drift check and sync — targeted or full resync |
-| `update.sh` | Pull latest mex infrastructure without touching populated content |
-| `visualize.sh` | Render scaffold graph |
-
-## FAQ
-
-### Why not just use CLAUDE.md?
-
-CLAUDE.md is great — we use it. It's the entry point. But it has a scaling problem.
-
-Small project? CLAUDE.md is all you need. Put your conventions in there, done.
-
-But once your project has 10+ services, multiple API clients, a deployment pipeline, and conventions that vary by layer — you hit a wall. Either CLAUDE.md becomes a 2000-line doc that burns tokens and dilutes attention, or you keep it short and the agent misses things.
-
-mex keeps CLAUDE.md short (~120 tokens) and turns it into a *pointer*: "Read `.mex/ROUTER.md` before doing anything." From there, the agent navigates to only the context it needs. Your CLAUDE.md stays lean. Your agent stays informed.
-
-**Use CLAUDE.md alone when:** your project is small, conventions are simple, one file covers it.
-
-**Add mex when:** your agent keeps forgetting things, your CLAUDE.md is getting long, or you're tired of re-explaining the same context every session.
-
-### Does this work with tools other than Claude Code?
-
-Yes. The scaffold is tool-agnostic. The core files (AGENTS.md, ROUTER.md, context/, patterns/) work with any agent that can read files. Tool-specific config files (`.cursorrules`, `.windsurfrules`, `copilot-instructions.md`) are provided in `.tool-configs/` — they all contain the same content. The CLI engine works standalone with zero API keys for drift detection.
-
-### How much setup time?
-
-About 5 minutes. Clone, run `setup.sh`, done. The scanner pre-analyzes your codebase so the AI reasons from a brief instead of exploring — faster and cheaper.
-
-### What if my codebase changes?
-
-Run `.mex/sync.sh` for an interactive flow, or `mex check` to see what's drifted and `mex sync` to fix it. For automatic detection, `mex watch` installs a post-commit hook that shows your drift score after every commit. Decisions are never deleted — superseded entries preserve the reasoning history.
+```
+your-project/
+├── CLAUDE.md              ← auto-loaded by tool, points to .mex/
+├── .mex/
+│   ├── ROUTER.md          ← routing table, session bootstrap
+│   ├── AGENTS.md          ← always-loaded anchor (~150 tokens)
+│   ├── context/
+│   │   ├── architecture.md   # how components connect
+│   │   ├── stack.md           # technology choices and reasoning
+│   │   ├── conventions.md     # naming, structure, patterns
+│   │   ├── decisions.md       # append-only decision log
+│   │   └── setup.md           # how to run locally
+│   ├── patterns/
+│   │   ├── INDEX.md           # pattern registry
+│   │   └── *.md               # task-specific guides with gotchas + verify checklists
+│   ├── setup.sh            # first-time setup
+│   ├── sync.sh             # interactive drift check + sync
+│   └── update.sh           # pull latest mex without touching content
+└── src/
+```
 
 ## Multi-Tool Compatibility
 
-| Tool | File |
-|------|------|
+| Tool | Config file |
+|------|------------|
 | Claude Code | `CLAUDE.md` |
 | Cursor | `.cursorrules` |
 | Windsurf | `.windsurfrules` |
 | GitHub Copilot | `copilot-instructions.md` |
-| Any tool / generic | `AGENTS.md` (root) |
 
-All tool-config files contain identical content. See `.tool-configs/README.md`.
+All config files contain identical content. `setup.sh` asks which tool you use and copies the right one.
 
-## Design Principles
+## Contributing
 
-- **Minimal always-loaded surface** — AGENTS.md stays under 150 tokens. Everything else is navigated to on demand.
-- **Structured navigation over context dumping** — the agent traverses a graph, not a wall of text.
-- **Deterministic before AI** — CLI handles extraction, validation, and detection. AI only fires when reasoning is needed.
-- **Drift prevention built in** — `mex check` catches drift deterministically. `mex sync` fixes only what's broken. Decisions are append-only.
-- **Tool-agnostic** — works with any AI coding tool. No vendor lock-in.
-- **No tech-stack assumptions** — every file works for any project type.
+Contributions welcome. Open an issue or submit a PR.
+
+## License
+
+[MIT](LICENSE)
+</content>
+</invoke>
