@@ -59,6 +59,14 @@ if command -v mex &>/dev/null; then
   MEX_CMD="mex"
 elif [ -f "$SCRIPT_DIR/dist/cli.js" ]; then
   MEX_CMD="node $SCRIPT_DIR/dist/cli.js"
+elif command -v node &>/dev/null && [ -f "$SCRIPT_DIR/package.json" ]; then
+  info "Building mex CLI engine..."
+  if (cd "$SCRIPT_DIR" && npm install --silent 2>/dev/null && npm run build --silent 2>/dev/null); then
+    ok "CLI engine built"
+    MEX_CMD="node $SCRIPT_DIR/dist/cli.js"
+  else
+    warn "CLI build failed"
+  fi
 fi
 
 # ─────────────────────────────────────────────────────────────

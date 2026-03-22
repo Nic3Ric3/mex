@@ -86,7 +86,39 @@ safe_copy() {
 }
 
 # ─────────────────────────────────────────────────────────────
-# Step 1 — Detect project state
+# Step 1 — Build CLI engine (if Node available)
+# ─────────────────────────────────────────────────────────────
+
+MEX_CMD=""
+if command -v node &>/dev/null; then
+  if [ ! -f "$SCRIPT_DIR/dist/cli.js" ]; then
+    if [ -f "$SCRIPT_DIR/package.json" ]; then
+      info "Building mex CLI engine..."
+      (cd "$SCRIPT_DIR" && npm install --silent 2>/dev/null && npm run build --silent 2>/dev/null) && {
+        ok "CLI engine built — drift detection, pre-analysis scanner, and targeted sync available"
+        MEX_CMD="node $SCRIPT_DIR/dist/cli.js"
+      } || {
+        warn "CLI build failed — continuing without it (setup still works)"
+      }
+    fi
+  else
+    MEX_CMD="node $SCRIPT_DIR/dist/cli.js"
+    ok "CLI engine ready"
+  fi
+else
+  warn "Node.js not found — CLI features (drift detection, scanner) unavailable"
+  info "Install Node.js 20+ for the full experience, or continue without it"
+fi
+
+# Also check for global mex command
+if [ -z "$MEX_CMD" ] && command -v mex &>/dev/null; then
+  MEX_CMD="mex"
+fi
+
+echo ""
+
+# ─────────────────────────────────────────────────────────────
+# Step 2 — Detect project state
 # ─────────────────────────────────────────────────────────────
 
 banner
@@ -153,7 +185,7 @@ esac
 echo ""
 
 # ─────────────────────────────────────────────────────────────
-# Step 2 — Tool config selection (copy to project root)
+# Step 3 — Tool config selection (copy to project root)
 # ─────────────────────────────────────────────────────────────
 
 header "Which AI tool do you use?"
@@ -212,29 +244,25 @@ esac
 echo ""
 
 # ─────────────────────────────────────────────────────────────
-# Step 3 — Pre-analyze codebase (if mex CLI available)
+# Step 4 — Pre-analyze codebase (if CLI available)
 # ─────────────────────────────────────────────────────────────
 
 SCANNER_BRIEF=""
-if [ "$PROJECT_STATE" != "fresh" ]; then
-  # Try mex CLI first (installed globally or locally)
-  if command -v mex &>/dev/null; then
-    info "Running mex pre-analysis scanner..."
-    SCANNER_BRIEF=$(cd "$PROJECT_DIR" && mex init --json 2>/dev/null) || SCANNER_BRIEF=""
-  elif [ -f "$SCRIPT_DIR/dist/cli.js" ]; then
-    info "Running mex pre-analysis scanner..."
-    SCANNER_BRIEF=$(cd "$PROJECT_DIR" && node "$SCRIPT_DIR/dist/cli.js" init --json 2>/dev/null) || SCANNER_BRIEF=""
-  fi
+if [ "$PROJECT_STATE" != "fresh" ] && [ -n "$MEX_CMD" ]; then
+  info "Running mex pre-analysis scanner..."
+  SCANNER_BRIEF=$(cd "$PROJECT_DIR" && $MEX_CMD init --json 2>/dev/null) || SCANNER_BRIEF=""
 
   if [ -n "$SCANNER_BRIEF" ]; then
     ok "Pre-analysis complete — AI will reason from brief instead of exploring (~5-8k tokens vs ~50k)"
   else
-    warn "Pre-analysis unavailable — AI will explore the filesystem directly"
+    warn "Scanner failed — AI will explore the filesystem directly"
   fi
+elif [ "$PROJECT_STATE" != "fresh" ]; then
+  warn "No CLI — AI will explore the filesystem directly"
 fi
 
 # ─────────────────────────────────────────────────────────────
-# Step 4 — Build the setup prompt
+# Step 5 — Build the setup prompt
 # ─────────────────────────────────────────────────────────────
 
 if [ "$PROJECT_STATE" = "fresh" ]; then
@@ -426,7 +454,7 @@ you could not fill with confidence."
 fi
 
 # ─────────────────────────────────────────────────────────────
-# Step 5 — Run or print the setup prompt
+# Step 6 — Run or print the setup prompt
 # ─────────────────────────────────────────────────────────────
 
 if [ "$DRY_RUN" -eq 1 ]; then
