@@ -8,7 +8,7 @@ import { verifySync } from "./verifier.js";
 /** Run targeted sync: detect → brief → AI → verify */
 export async function runSync(
   config: MexConfig,
-  opts: { dryRun?: boolean }
+  opts: { dryRun?: boolean; includeWarnings?: boolean }
 ): Promise<void> {
   // Step 1: Run drift check
   console.log(chalk.bold("Running drift check..."));
@@ -26,7 +26,23 @@ export async function runSync(
   );
 
   // Step 2: Group issues by file to create sync targets
-  const targets = groupIntoTargets(report.issues);
+  // By default, only sync files with at least one error (skip warning-only files)
+  const relevantIssues = opts.includeWarnings
+    ? report.issues
+    : report.issues.filter((i) => {
+        // Keep all issues from files that have at least one error
+        const fileHasError = report.issues.some(
+          (other) => other.file === i.file && other.severity === "error"
+        );
+        return fileHasError;
+      });
+
+  if (relevantIssues.length === 0) {
+    console.log(chalk.green("No errors found. Only warnings remain (use --warnings to include them)."));
+    return;
+  }
+
+  const targets = groupIntoTargets(relevantIssues);
 
   console.log(
     chalk.bold(`\n${targets.length} file(s) need attention:\n`)

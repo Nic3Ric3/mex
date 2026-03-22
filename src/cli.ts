@@ -65,11 +65,12 @@ program
   .command("sync")
   .description("Run drift check, then build targeted prompts for AI to fix flagged files")
   .option("--dry-run", "Show what would be synced without executing")
+  .option("--warnings", "Include warning-only files (by default only errors are synced)")
   .action(async (opts) => {
     try {
       const config = findConfig();
       const { runSync } = await import("./sync/index.js");
-      await runSync(config, { dryRun: opts.dryRun });
+      await runSync(config, { dryRun: opts.dryRun, includeWarnings: opts.warnings });
     } catch (err) {
       console.error((err as Error).message);
       process.exit(1);

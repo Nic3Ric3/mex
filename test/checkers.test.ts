@@ -97,7 +97,7 @@ describe("checkPaths", () => {
     }
   });
 
-  it("downgrades to warning for bare filenames", () => {
+  it("reports error for bare filenames not found anywhere", () => {
     const claims = [
       claim({ kind: "path", value: "conversation_state.py", source: "context/architecture.md" }),
       claim({ kind: "path", value: "server.py", source: "context/architecture.md" }),
@@ -105,7 +105,7 @@ describe("checkPaths", () => {
     const issues = checkPaths(claims, tmpDir, tmpDir);
     expect(issues).toHaveLength(2);
     for (const issue of issues) {
-      expect(issue.severity).toBe("warning");
+      expect(issue.severity).toBe("error");
     }
   });
 
