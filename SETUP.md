@@ -4,6 +4,20 @@ This file contains the prompts to populate the scaffold. It is NOT the dev envir
 
 This scaffold is currently empty. Follow the steps below to populate it for your project.
 
+## Recommended: Use setup.sh
+
+```bash
+.mex/setup.sh
+```
+
+The script handles everything automatically:
+1. Detects your project state (existing codebase, fresh project, or partial)
+2. Asks which AI tool you use and copies the right config file
+3. Pre-scans your codebase with `mex init` to build a structured brief (~5-8k tokens vs ~50k from AI exploration)
+4. Builds and runs the population prompt — or prints it for manual paste
+
+If you want to populate manually instead, use the prompts below.
+
 ## Detecting Your State
 
 **Existing codebase?** Follow Option A.
@@ -196,8 +210,6 @@ in any scaffold file.
 
 ## After Setup
 
-**If using Claude Code:** Copy the populated `.mex/AGENTS.md` content into your root `CLAUDE.md` — it should match, since CLAUDE.md is the always-loaded entry point for Claude Code.
-
 **Verify** by starting a fresh session and asking your agent:
 "Read `.mex/ROUTER.md` and tell me what you now know about this project."
 
@@ -206,3 +218,11 @@ A well-populated scaffold should give the agent enough to:
 - Name the non-negotiable conventions
 - Know which files to load for any given task type
 - Know which patterns exist for common task types
+
+## Keeping It Fresh
+
+Once the scaffold is populated, use these to keep it aligned with your codebase:
+
+- **`mex check`** — detect drift (zero tokens, zero AI)
+- **`.mex/sync.sh`** — interactive drift check + targeted or full resync
+- **`mex watch`** — auto drift score after every commit
