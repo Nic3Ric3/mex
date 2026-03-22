@@ -36,7 +36,7 @@ export async function runDriftCheck(config: MexConfig): Promise<DriftReport> {
     // Frontmatter edge check
     const frontmatter = parseFrontmatter(filePath);
     allIssues.push(
-      ...checkEdges(frontmatter, filePath, source, projectRoot)
+      ...checkEdges(frontmatter, filePath, source, projectRoot, scaffoldRoot)
     );
 
     // Staleness check
@@ -45,13 +45,13 @@ export async function runDriftCheck(config: MexConfig): Promise<DriftReport> {
   }
 
   // Run checkers that work on claims
-  allIssues.push(...checkPaths(allClaims, projectRoot));
+  allIssues.push(...checkPaths(allClaims, projectRoot, scaffoldRoot));
   allIssues.push(...checkCommands(allClaims, projectRoot));
   allIssues.push(...checkDependencies(allClaims, projectRoot));
   allIssues.push(...checkCrossFile(allClaims));
 
   // Run structural checkers
-  allIssues.push(...checkIndexSync(projectRoot));
+  allIssues.push(...checkIndexSync(projectRoot, scaffoldRoot));
 
   const score = computeScore(allIssues);
 
@@ -68,25 +68,29 @@ function findScaffoldFiles(
   projectRoot: string,
   scaffoldRoot: string
 ): string[] {
-  const patterns = [
+  const scaffoldPatterns = [
     "context/*.md",
     "patterns/*.md",
     "ROUTER.md",
     "AGENTS.md",
-    "CLAUDE.md",
     "SETUP.md",
     "SYNC.md",
   ];
 
-  // If scaffold root is .mex/, search inside it
-  if (scaffoldRoot !== projectRoot) {
-    patterns.push(".mex/**/*.md");
+  const files: string[] = [];
+
+  // Search inside scaffold root (handles both .mex/ and root layouts)
+  for (const pattern of scaffoldPatterns) {
+    const matches = globSync(pattern, { cwd: scaffoldRoot, absolute: true });
+    files.push(...matches);
   }
 
-  const files: string[] = [];
-  for (const pattern of patterns) {
-    const matches = globSync(pattern, { cwd: projectRoot, absolute: true });
-    files.push(...matches);
+  // Also check project root for tool config files (CLAUDE.md, etc.)
+  if (scaffoldRoot !== projectRoot) {
+    for (const name of ["CLAUDE.md", ".cursorrules", ".windsurfrules"]) {
+      const matches = globSync(name, { cwd: projectRoot, absolute: true });
+      files.push(...matches);
+    }
   }
 
   // Deduplicate

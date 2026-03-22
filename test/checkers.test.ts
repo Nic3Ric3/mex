@@ -40,7 +40,7 @@ function claim(overrides: Partial<Claim> & { kind: Claim["kind"]; value: string 
 describe("checkPaths", () => {
   it("reports missing paths", () => {
     const claims = [claim({ kind: "path", value: "src/missing.ts" })];
-    const issues = checkPaths(claims, tmpDir);
+    const issues = checkPaths(claims, tmpDir, tmpDir);
     expect(issues).toHaveLength(1);
     expect(issues[0].code).toBe("MISSING_PATH");
   });
@@ -49,7 +49,7 @@ describe("checkPaths", () => {
     mkdirSync(join(tmpDir, "src"), { recursive: true });
     writeFileSync(join(tmpDir, "src/index.ts"), "");
     const claims = [claim({ kind: "path", value: "src/index.ts" })];
-    const issues = checkPaths(claims, tmpDir);
+    const issues = checkPaths(claims, tmpDir, tmpDir);
     expect(issues).toHaveLength(0);
   });
 
@@ -57,14 +57,23 @@ describe("checkPaths", () => {
     const claims = [
       claim({ kind: "path", value: "src/missing.ts", negated: true }),
     ];
-    const issues = checkPaths(claims, tmpDir);
+    const issues = checkPaths(claims, tmpDir, tmpDir);
     expect(issues).toHaveLength(0);
   });
 
   it("resolves .mex/ prefixed paths to root", () => {
     writeFileSync(join(tmpDir, "ROUTER.md"), "# Router");
     const claims = [claim({ kind: "path", value: ".mex/ROUTER.md" })];
-    const issues = checkPaths(claims, tmpDir);
+    const issues = checkPaths(claims, tmpDir, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("resolves paths relative to scaffoldRoot when deployed as .mex/", () => {
+    const mexDir = join(tmpDir, ".mex");
+    mkdirSync(join(mexDir, "context"), { recursive: true });
+    writeFileSync(join(mexDir, "context/architecture.md"), "# Arch");
+    const claims = [claim({ kind: "path", value: "context/architecture.md" })];
+    const issues = checkPaths(claims, tmpDir, mexDir);
     expect(issues).toHaveLength(0);
   });
 });
@@ -76,7 +85,7 @@ describe("checkEdges", () => {
     const fm: ScaffoldFrontmatter = {
       edges: [{ target: "context/missing.md" }],
     };
-    const issues = checkEdges(fm, "router.md", "ROUTER.md", tmpDir);
+    const issues = checkEdges(fm, "router.md", "ROUTER.md", tmpDir, tmpDir);
     expect(issues).toHaveLength(1);
     expect(issues[0].code).toBe("DEAD_EDGE");
   });
@@ -87,16 +96,27 @@ describe("checkEdges", () => {
     const fm: ScaffoldFrontmatter = {
       edges: [{ target: "context/arch.md" }],
     };
-    const issues = checkEdges(fm, "router.md", "ROUTER.md", tmpDir);
+    const issues = checkEdges(fm, "router.md", "ROUTER.md", tmpDir, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+
+  it("resolves edge targets relative to scaffoldRoot", () => {
+    const mexDir = join(tmpDir, ".mex");
+    mkdirSync(join(mexDir, "context"), { recursive: true });
+    writeFileSync(join(mexDir, "context/stack.md"), "");
+    const fm: ScaffoldFrontmatter = {
+      edges: [{ target: "context/stack.md" }],
+    };
+    const issues = checkEdges(fm, "router.md", "ROUTER.md", tmpDir, mexDir);
     expect(issues).toHaveLength(0);
   });
 
   it("returns empty for no frontmatter", () => {
-    expect(checkEdges(null, "f", "f", tmpDir)).toEqual([]);
+    expect(checkEdges(null, "f", "f", tmpDir, tmpDir)).toEqual([]);
   });
 
   it("returns empty for no edges", () => {
-    expect(checkEdges({ name: "test" }, "f", "f", tmpDir)).toEqual([]);
+    expect(checkEdges({ name: "test" }, "f", "f", tmpDir, tmpDir)).toEqual([]);
   });
 });
 
@@ -205,7 +225,7 @@ describe("checkIndexSync", () => {
       join(tmpDir, "patterns/INDEX.md"),
       "| [missing.md](missing.md) | A pattern |"
     );
-    const issues = checkIndexSync(tmpDir);
+    const issues = checkIndexSync(tmpDir, tmpDir);
     expect(issues).toHaveLength(1);
     expect(issues[0].code).toBe("INDEX_ORPHAN_ENTRY");
   });
@@ -214,7 +234,7 @@ describe("checkIndexSync", () => {
     mkdirSync(join(tmpDir, "patterns"), { recursive: true });
     writeFileSync(join(tmpDir, "patterns/INDEX.md"), "# Index\n\nEmpty.");
     writeFileSync(join(tmpDir, "patterns/auth.md"), "# Auth pattern");
-    const issues = checkIndexSync(tmpDir);
+    const issues = checkIndexSync(tmpDir, tmpDir);
     expect(issues).toHaveLength(1);
     expect(issues[0].code).toBe("INDEX_MISSING_ENTRY");
   });
@@ -226,7 +246,7 @@ describe("checkIndexSync", () => {
       "| [auth.md](auth.md) | Auth pattern |"
     );
     writeFileSync(join(tmpDir, "patterns/auth.md"), "# Auth");
-    const issues = checkIndexSync(tmpDir);
+    const issues = checkIndexSync(tmpDir, tmpDir);
     expect(issues).toHaveLength(0);
   });
 
@@ -236,7 +256,7 @@ describe("checkIndexSync", () => {
       join(tmpDir, "patterns/INDEX.md"),
       "<!-- [example.md](example.md) is a template -->\n\n| Pattern | Use when |\n|---|---|"
     );
-    const issues = checkIndexSync(tmpDir);
+    const issues = checkIndexSync(tmpDir, tmpDir);
     expect(issues).toHaveLength(0);
   });
 });

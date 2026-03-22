@@ -7,7 +7,8 @@ export function checkEdges(
   frontmatter: ScaffoldFrontmatter | null,
   filePath: string,
   source: string,
-  projectRoot: string
+  projectRoot: string,
+  scaffoldRoot: string
 ): DriftIssue[] {
   if (!frontmatter?.edges) return [];
 
@@ -16,9 +17,10 @@ export function checkEdges(
   for (const edge of frontmatter.edges) {
     if (!edge.target) continue;
 
-    // Resolve edge target relative to project root
-    const targetPath = resolve(projectRoot, edge.target);
-    if (!existsSync(targetPath)) {
+    // Try project root, then scaffold root
+    const fromProject = resolve(projectRoot, edge.target);
+    const fromScaffold = resolve(scaffoldRoot, edge.target);
+    if (!existsSync(fromProject) && !existsSync(fromScaffold)) {
       issues.push({
         code: "DEAD_EDGE",
         severity: "error",

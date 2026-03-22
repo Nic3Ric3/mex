@@ -4,8 +4,12 @@ import { globSync } from "glob";
 import type { DriftIssue } from "../../types.js";
 
 /** Cross-reference patterns/INDEX.md with actual pattern files */
-export function checkIndexSync(projectRoot: string): DriftIssue[] {
-  const patternsDir = resolve(projectRoot, "patterns");
+export function checkIndexSync(projectRoot: string, scaffoldRoot: string): DriftIssue[] {
+  // Try scaffold root first (deployed as .mex/), then project root
+  let patternsDir = resolve(scaffoldRoot, "patterns");
+  if (!existsSync(patternsDir)) {
+    patternsDir = resolve(projectRoot, "patterns");
+  }
   const indexPath = resolve(patternsDir, "INDEX.md");
 
   if (!existsSync(indexPath)) return [];
