@@ -10,6 +10,28 @@ const DEPENDENCY_SECTION_PATTERNS = /key\s*libraries|core\s*technologies|depende
 /** Paths with angle brackets or square brackets are template placeholders, not real paths */
 const TEMPLATE_PLACEHOLDER = /[<>\[\]{}]/;
 
+/** Things that look like paths but are actually code snippets, URL routes, or other non-path content */
+function isNotAPath(value: string): boolean {
+  // URL routes: /voice/incoming, /api/users — start with / but have no file extension
+  if (value.startsWith("/") && !KNOWN_EXTENSIONS.test(value)) return true;
+
+  // Code snippets: contains =, (), ;, or other code-like characters
+  if (/[=();,]/.test(value)) return true;
+
+  // Quoted strings or attribute assignments: gather.action="...", foo="bar"
+  if (/["']/.test(value)) return true;
+
+  // Wildcard prefixes like *_streaming_client.py — patterns, not real paths
+  if (value.startsWith("*")) return true;
+
+  // Bare filenames without a directory (e.g. `pipeline.py`, `server.py`) are typically
+  // mentions/references in prose, not path claims that should be validated.
+  // Only treat as a path if it contains a `/` (directory separator).
+  if (!value.includes("/") && KNOWN_EXTENSIONS.test(value)) return true;
+
+  return false;
+}
+
 /** Extract all claims from a markdown file */
 export function extractClaims(filePath: string, source: string): Claim[] {
   let content: string;
@@ -30,8 +52,8 @@ export function extractClaims(filePath: string, source: string): Claim[] {
 
     // Path claims: contains / or ends in known extension
     if (node.value.includes("/") || KNOWN_EXTENSIONS.test(node.value)) {
-      // Skip commands and template placeholders like <name>.md or [file].ts
-      if (!COMMAND_PREFIXES.test(node.value) && !TEMPLATE_PLACEHOLDER.test(node.value)) {
+      // Skip commands, template placeholders, and non-path content
+      if (!COMMAND_PREFIXES.test(node.value) && !TEMPLATE_PLACEHOLDER.test(node.value) && !isNotAPath(node.value)) {
         claims.push({
           kind: "path",
           value: node.value,

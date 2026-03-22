@@ -32,16 +32,16 @@ describe("extractClaims — paths", () => {
     expect(paths[0].value).toBe("src/index.ts");
   });
 
-  it("extracts paths by known extension", () => {
+  it("extracts paths with directory + known extension", () => {
     const path = writeFixture(
       "test.md",
-      "# Files\n\nSee `config.json` and `app.py`."
+      "# Files\n\nSee `src/config.json` and `lib/app.py`."
     );
     const claims = extractClaims(path, "test.md");
     const paths = claims.filter((c) => c.kind === "path");
     expect(paths).toHaveLength(2);
-    expect(paths.map((p) => p.value)).toContain("config.json");
-    expect(paths.map((p) => p.value)).toContain("app.py");
+    expect(paths.map((p) => p.value)).toContain("src/config.json");
+    expect(paths.map((p) => p.value)).toContain("lib/app.py");
   });
 
   it("skips template placeholders with angle brackets", () => {
@@ -62,6 +62,57 @@ describe("extractClaims — paths", () => {
     const claims = extractClaims(path, "test.md");
     const paths = claims.filter((c) => c.kind === "path");
     expect(paths).toHaveLength(0);
+  });
+
+  it("skips URL routes without file extensions", () => {
+    const path = writeFixture(
+      "test.md",
+      "# Routes\n\nEndpoints: `/voice/incoming`, `/voice/process`, `/api/users`."
+    );
+    const claims = extractClaims(path, "test.md");
+    const paths = claims.filter((c) => c.kind === "path");
+    expect(paths).toHaveLength(0);
+  });
+
+  it("skips code snippets with parentheses or equals", () => {
+    const path = writeFixture(
+      "test.md",
+      "# Code\n\nUse `response.redirect(\"/next\")` and `base_url: str = os.getenv(\"FOO\")`."
+    );
+    const claims = extractClaims(path, "test.md");
+    const paths = claims.filter((c) => c.kind === "path");
+    expect(paths).toHaveLength(0);
+  });
+
+  it("skips wildcard patterns like *_client.py", () => {
+    const path = writeFixture(
+      "test.md",
+      "# Clients\n\nAll files matching `*_streaming_client.py`."
+    );
+    const claims = extractClaims(path, "test.md");
+    const paths = claims.filter((c) => c.kind === "path");
+    expect(paths).toHaveLength(0);
+  });
+
+  it("skips bare filenames without directory separators", () => {
+    const path = writeFixture(
+      "test.md",
+      "# Files\n\nSee `pipeline.py` and `server.py` for details."
+    );
+    const claims = extractClaims(path, "test.md");
+    const paths = claims.filter((c) => c.kind === "path");
+    expect(paths).toHaveLength(0);
+  });
+
+  it("still extracts paths with directory separators", () => {
+    const path = writeFixture(
+      "test.md",
+      "# Files\n\nSee `api_clients/groq_client.py` for the implementation."
+    );
+    const claims = extractClaims(path, "test.md");
+    const paths = claims.filter((c) => c.kind === "path");
+    expect(paths).toHaveLength(1);
+    expect(paths[0].value).toBe("api_clients/groq_client.py");
   });
 
   it("marks paths under negated sections", () => {
