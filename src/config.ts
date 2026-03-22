@@ -8,12 +8,9 @@ import type { MexConfig } from "./types.js";
  */
 export function findConfig(startDir?: string): MexConfig {
   const dir = startDir ?? process.cwd();
-  const projectRoot = findProjectRoot(dir);
-  if (!projectRoot) {
-    throw new Error(
-      `Not inside a git repository. Run mex from within a project.`
-    );
-  }
+
+  // Try git root first, fall back to cwd if no git repo
+  const projectRoot = findProjectRoot(dir) ?? dir;
 
   const scaffoldRoot = findScaffoldRoot(projectRoot);
   if (!scaffoldRoot) {

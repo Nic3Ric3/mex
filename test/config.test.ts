@@ -15,13 +15,20 @@ afterEach(() => {
 });
 
 describe("findConfig", () => {
-  it("throws when not in a git repo", () => {
-    expect(() => findConfig(tmpDir)).toThrow("Not inside a git repository");
+  it("throws when no scaffold found (no .git)", () => {
+    expect(() => findConfig(tmpDir)).toThrow("No scaffold found");
   });
 
-  it("throws when no scaffold found", () => {
+  it("throws when no scaffold found (with .git)", () => {
     mkdirSync(join(tmpDir, ".git"));
     expect(() => findConfig(tmpDir)).toThrow("No scaffold found");
+  });
+
+  it("works without .git if scaffold exists", () => {
+    mkdirSync(join(tmpDir, ".mex"));
+    const config = findConfig(tmpDir);
+    expect(config.projectRoot).toBe(tmpDir);
+    expect(config.scaffoldRoot).toBe(join(tmpDir, ".mex"));
   });
 
   it("finds scaffold with context/ directory", () => {

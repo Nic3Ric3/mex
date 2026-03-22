@@ -90,29 +90,34 @@ safe_copy() {
 # ─────────────────────────────────────────────────────────────
 
 MEX_CMD=""
-if command -v node &>/dev/null; then
-  if [ ! -f "$SCRIPT_DIR/dist/cli.js" ]; then
-    if [ -f "$SCRIPT_DIR/package.json" ]; then
-      info "Building mex CLI engine..."
-      (cd "$SCRIPT_DIR" && npm install --silent 2>/dev/null && npm run build --silent 2>/dev/null) && {
-        ok "CLI engine built — drift detection, pre-analysis scanner, and targeted sync available"
-        MEX_CMD="node $SCRIPT_DIR/dist/cli.js"
-      } || {
-        warn "CLI build failed — continuing without it (setup still works)"
-      }
-    fi
-  else
+
+# Check for global mex command first
+if command -v mex &>/dev/null; then
+  MEX_CMD="mex"
+  ok "mex CLI found"
+elif command -v node &>/dev/null; then
+  if [ -f "$SCRIPT_DIR/dist/cli.js" ]; then
     MEX_CMD="node $SCRIPT_DIR/dist/cli.js"
     ok "CLI engine ready"
+  elif [ -f "$SCRIPT_DIR/package.json" ]; then
+    info "Building mex CLI engine (first-time setup)..."
+    BUILD_LOG=$(cd "$SCRIPT_DIR" && npm install 2>&1) || {
+      warn "npm install failed — continuing without CLI"
+      warn "Run manually: cd .mex && npm install && npm run build"
+    }
+    if [ -d "$SCRIPT_DIR/node_modules" ]; then
+      BUILD_LOG=$(cd "$SCRIPT_DIR" && npm run build 2>&1) || {
+        warn "npm build failed — continuing without CLI"
+        warn "Run manually: cd .mex && npm run build"
+      }
+    fi
+    if [ -f "$SCRIPT_DIR/dist/cli.js" ]; then
+      MEX_CMD="node $SCRIPT_DIR/dist/cli.js"
+      ok "CLI engine built — drift detection, pre-analysis, and targeted sync ready"
+    fi
   fi
 else
-  warn "Node.js not found — CLI features (drift detection, scanner) unavailable"
-  info "Install Node.js 20+ for the full experience, or continue without it"
-fi
-
-# Also check for global mex command
-if [ -z "$MEX_CMD" ] && command -v mex &>/dev/null; then
-  MEX_CMD="mex"
+  warn "Node.js not found — CLI features unavailable (setup still works)"
 fi
 
 echo ""
@@ -250,7 +255,12 @@ echo ""
 SCANNER_BRIEF=""
 if [ "$PROJECT_STATE" != "fresh" ] && [ -n "$MEX_CMD" ]; then
   info "Running mex pre-analysis scanner..."
-  SCANNER_BRIEF=$(cd "$PROJECT_DIR" && $MEX_CMD init --json 2>/dev/null) || SCANNER_BRIEF=""
+  SCANNER_BRIEF=$(cd "$PROJECT_DIR" && $MEX_CMD init --json 2>&1) || SCANNER_BRIEF=""
+  # If the output looks like an error (not JSON), clear it
+  if [ -n "$SCANNER_BRIEF" ] && ! echo "$SCANNER_BRIEF" | head -1 | grep -q '^{'; then
+    warn "Scanner error: $(echo "$SCANNER_BRIEF" | head -1)"
+    SCANNER_BRIEF=""
+  fi
 
   if [ -n "$SCANNER_BRIEF" ]; then
     ok "Pre-analysis complete — AI will reason from brief instead of exploring (~5-8k tokens vs ~50k)"
