@@ -63,10 +63,15 @@ INFRA_FILES=(
   "SYNC.md"
   "LICENSE"
   "patterns/README.md"
+  "package.json"
+  "tsconfig.json"
+  "tsup.config.ts"
 )
 
 INFRA_DIRS=(
   ".tool-configs"
+  "src"
+  "test"
 )
 
 # Content files — NEVER overwrite
@@ -124,7 +129,7 @@ for file in "${INFRA_FILES[@]}"; do
   fi
 done
 
-# Update infrastructure directories
+# Update infrastructure directories (recursive)
 for dir in "${INFRA_DIRS[@]}"; do
   src_dir="$TMP_DIR/$dir"
   dest_dir="$SCRIPT_DIR/$dir"
@@ -133,25 +138,25 @@ for dir in "${INFRA_DIRS[@]}"; do
     continue
   fi
 
-  mkdir -p "$dest_dir"
+  # Find all files recursively in the source directory
+  while IFS= read -r src_file; do
+    rel_path="${src_file#"$src_dir/"}"
+    dest_file="$dest_dir/$rel_path"
 
-  for src_file in "$src_dir"/*; do
-    [ -f "$src_file" ] || continue
-    filename="$(basename "$src_file")"
-    dest_file="$dest_dir/$filename"
+    mkdir -p "$(dirname "$dest_file")"
 
     if [ ! -f "$dest_file" ]; then
       cp "$src_file" "$dest_file"
-      ADDED+=("$dir/$filename")
-      ok "Added $dir/$filename (new)"
+      ADDED+=("$dir/$rel_path")
+      ok "Added $dir/$rel_path (new)"
     elif ! diff -q "$src_file" "$dest_file" &>/dev/null; then
       cp "$src_file" "$dest_file"
-      UPDATED+=("$dir/$filename")
-      ok "Updated $dir/$filename"
+      UPDATED+=("$dir/$rel_path")
+      ok "Updated $dir/$rel_path"
     else
-      UNCHANGED+=("$dir/$filename")
+      UNCHANGED+=("$dir/$rel_path")
     fi
-  done
+  done < <(find "$src_dir" -type f)
 done
 
 # Preserve executable permissions on scripts
@@ -159,6 +164,24 @@ chmod +x "$SCRIPT_DIR/setup.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/update.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/sync.sh" 2>/dev/null || true
 chmod +x "$SCRIPT_DIR/visualize.sh" 2>/dev/null || true
+
+# Rebuild CLI if source files were updated
+CLI_UPDATED=0
+for f in "${UPDATED[@]}" "${ADDED[@]}"; do
+  case "$f" in
+    src/*|package.json|tsconfig.json|tsup.config.ts) CLI_UPDATED=1 ;;
+  esac
+done
+
+if [ "$CLI_UPDATED" -eq 1 ] && command -v node &>/dev/null; then
+  echo ""
+  header "Rebuilding CLI engine..."
+  if (cd "$SCRIPT_DIR" && npm install --silent 2>/dev/null && npm run build --silent 2>/dev/null); then
+    ok "CLI engine rebuilt"
+  else
+    warn "CLI rebuild failed — run manually: cd .mex && npm install && npm run build"
+  fi
+fi
 
 echo ""
 
