@@ -81,14 +81,22 @@ function findScaffoldFiles(
 
   // Search inside scaffold root (handles both .mex/ and root layouts)
   for (const pattern of scaffoldPatterns) {
-    const matches = globSync(pattern, { cwd: scaffoldRoot, absolute: true });
+    const matches = globSync(pattern, {
+      cwd: scaffoldRoot,
+      absolute: true,
+      ignore: ["node_modules/**"],
+    });
     files.push(...matches);
   }
 
   // Also check project root for tool config files (CLAUDE.md, etc.)
   if (scaffoldRoot !== projectRoot) {
     for (const name of ["CLAUDE.md", ".cursorrules", ".windsurfrules"]) {
-      const matches = globSync(name, { cwd: projectRoot, absolute: true });
+      const matches = globSync(name, {
+        cwd: projectRoot,
+        absolute: true,
+        ignore: ["node_modules/**"],
+      });
       files.push(...matches);
     }
   }

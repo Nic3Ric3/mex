@@ -18,7 +18,7 @@ export function checkIndexSync(projectRoot: string, scaffoldRoot: string): Drift
   const issues: DriftIssue[] = [];
 
   // Get actual pattern files (exclude INDEX.md and README.md)
-  const patternFiles = globSync("*.md", { cwd: patternsDir })
+  const patternFiles = globSync("*.md", { cwd: patternsDir, ignore: ["node_modules/**"] })
     .filter((f) => f !== "INDEX.md" && f !== "README.md");
 
   // Parse INDEX.md for referenced files (strip HTML comments first)
