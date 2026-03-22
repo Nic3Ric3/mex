@@ -48,19 +48,51 @@ Seven checkers validate your scaffold against the real codebase. Zero tokens, ze
 
 Scoring: starts at 100. Deducts -10 per error, -3 per warning, -1 per info.
 
-## CLI Commands
+## CLI
+
+The CLI is built automatically during `setup.sh`. All commands run from your **project root** (not from inside `.mex/`).
+
+```bash
+# Using node directly
+node .mex/dist/cli.js check
+
+# Or link it globally for shorter commands
+cd .mex && npm link && cd ..
+mex check
+```
+
+If you need to rebuild manually:
+
+```bash
+cd .mex && npm install && npm run build && cd ..
+```
+
+### Commands
 
 | Command | What it does |
 |---------|-------------|
-| `mex check` | Run all 7 checkers, output drift score and issues |
-| `mex check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
-| `mex check --json` | Full report as JSON for programmatic use |
-| `mex init` | Pre-scan codebase, build structured brief for AI |
-| `mex init --json` | Raw scanner brief as JSON |
-| `mex sync` | Detect drift → build per-file prompts → AI fixes → verify |
-| `mex sync --dry-run` | Preview targeted prompts without executing |
-| `mex watch` | Install post-commit hook for automatic drift score |
-| `mex watch --uninstall` | Remove the hook |
+| `node .mex/dist/cli.js check` | Run all 7 checkers, output drift score and issues |
+| `node .mex/dist/cli.js check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
+| `node .mex/dist/cli.js check --json` | Full report as JSON for programmatic use |
+| `node .mex/dist/cli.js init` | Pre-scan codebase, build structured brief for AI |
+| `node .mex/dist/cli.js init --json` | Raw scanner brief as JSON |
+| `node .mex/dist/cli.js sync` | Detect drift → build per-file prompts → AI fixes → verify |
+| `node .mex/dist/cli.js sync --dry-run` | Preview targeted prompts without executing |
+| `node .mex/dist/cli.js sync --warnings` | Include warning-only files in sync |
+| `node .mex/dist/cli.js watch` | Install post-commit hook for automatic drift score |
+| `node .mex/dist/cli.js watch --uninstall` | Remove the hook |
+
+If you ran `npm link`, replace `node .mex/dist/cli.js` with `mex` in all commands above.
+
+### Scripts
+
+These run from inside `.mex/` or with the path prefix. They auto-build the CLI if needed.
+
+```bash
+bash .mex/setup.sh       # First-time setup — scan, prompt, populate
+bash .mex/sync.sh        # Interactive menu — check, sync, or export prompt
+bash .mex/update.sh      # Pull latest mex infrastructure, keep your content
+```
 
 ## Before / After
 
@@ -160,5 +192,3 @@ Contributions welcome. Open an issue or submit a PR.
 ## License
 
 [MIT](LICENSE)
-</content>
-</invoke>
