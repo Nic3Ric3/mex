@@ -1,8 +1,5 @@
 import chalk from "chalk";
-import { execSync, spawnSync } from "node:child_process";
-import { writeFileSync, unlinkSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 import type { MexConfig, SyncTarget, DriftIssue } from "../types.js";
 import { runDriftCheck } from "../drift/index.js";
 import { buildSyncBrief } from "./brief-builder.js";
@@ -81,30 +78,22 @@ export async function runSync(
     console.log(chalk.bold(`Syncing ${target.file}...`));
 
     try {
-      // Write prompt to temp file to avoid shell escaping issues
-      const tmpFile = join(tmpdir(), `mex-sync-${Date.now()}.md`);
-      writeFileSync(tmpFile, brief);
+      // Pass prompt as CLI argument, inherit all stdio so user can
+      // interact with claude (approve edits, see output)
+      const result = spawnSync("claude", [brief], {
+        cwd: config.projectRoot,
+        stdio: "inherit",
+        timeout: 300_000,
+      });
 
-      try {
-        // Pipe temp file content to claude CLI via stdin
-        const result = spawnSync("claude", ["--print"], {
-          cwd: config.projectRoot,
-          input: brief,
-          stdio: ["pipe", "inherit", "inherit"],
-          timeout: 120_000,
-        });
-
-        if (result.status !== 0) {
-          throw new Error(`claude exited with code ${result.status}`);
-        }
-      } finally {
-        try { unlinkSync(tmpFile); } catch {}
+      if (result.status !== 0 && result.status !== null) {
+        throw new Error(`claude exited with code ${result.status}`);
       }
     } catch {
       // Fall back to printing the prompt
       console.log(
         chalk.yellow(
-          `Could not run claude CLI. Here's the prompt to paste manually:`
+          `\nCould not run claude CLI. Here's the prompt to paste manually:\n`
         )
       );
       console.log(brief);
