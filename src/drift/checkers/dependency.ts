@@ -2,6 +2,25 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Claim, DriftIssue } from "../../types.js";
 
+/** Runtimes, platforms, and databases that appear in stack docs but aren't installable packages */
+const KNOWN_RUNTIMES = new Set([
+  "node.js", "node", "nodejs",
+  "python", "cpython",
+  "go", "golang",
+  "rust",
+  "ruby",
+  "java", "jdk", "jre",
+  "deno", "bun",
+  "sqlite", "sqlite3",
+  "postgresql", "postgres",
+  "mysql", "mariadb",
+  "mongodb", "mongo",
+  "redis",
+  "elasticsearch",
+  "docker",
+  "kubernetes", "k8s",
+]);
+
 /** Check that claimed dependencies exist in manifests */
 export function checkDependencies(
   claims: Claim[],
@@ -20,6 +39,10 @@ export function checkDependencies(
 
   for (const claim of depClaims) {
     const name = claim.value.toLowerCase();
+
+    // Skip known runtimes/platforms — they won't be in package.json
+    if (KNOWN_RUNTIMES.has(name)) continue;
+
     // Fuzzy match: "React" → "react", "Express" → "express"
     const found = deps.find(
       (d) => d.name.toLowerCase() === name

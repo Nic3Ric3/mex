@@ -10,10 +10,16 @@ const DEPENDENCY_SECTION_PATTERNS = /key\s*libraries|core\s*technologies|depende
 /** Paths with angle brackets or square brackets are template placeholders, not real paths */
 const TEMPLATE_PLACEHOLDER = /[<>\[\]{}]/;
 
+/** HTTP methods that indicate an API route, not a file path */
+const HTTP_METHOD_PREFIX = /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+\//;
+
 /** Things that look like paths but are actually code snippets, URL routes, or other non-path content */
 function isNotAPath(value: string): boolean {
   // URL routes: /voice/incoming, /api/users — start with / but have no file extension
   if (value.startsWith("/") && !KNOWN_EXTENSIONS.test(value)) return true;
+
+  // HTTP method + route: GET /api/bookmarks, POST /users/:id
+  if (HTTP_METHOD_PREFIX.test(value)) return true;
 
   // Code snippets: contains =, (), ;, or other code-like characters
   if (/[=();,]/.test(value)) return true;
