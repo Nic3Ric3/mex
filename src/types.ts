@@ -39,7 +39,8 @@ export type IssueCode =
   | "CROSS_FILE_CONFLICT"
   | "DEAD_EDGE"
   | "INDEX_MISSING_ENTRY"
-  | "INDEX_ORPHAN_ENTRY";
+  | "INDEX_ORPHAN_ENTRY"
+  | "UNDOCUMENTED_SCRIPT";
 
 export interface DriftIssue {
   code: IssueCode;

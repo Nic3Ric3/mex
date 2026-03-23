@@ -12,6 +12,7 @@ import { checkStaleness } from "./checkers/staleness.js";
 import { checkCommands } from "./checkers/command.js";
 import { checkDependencies } from "./checkers/dependency.js";
 import { checkCrossFile } from "./checkers/cross-file.js";
+import { checkScriptCoverage } from "./checkers/script-coverage.js";
 
 /** Run full drift detection across all scaffold files */
 export async function runDriftCheck(config: MexConfig): Promise<DriftReport> {
@@ -52,6 +53,9 @@ export async function runDriftCheck(config: MexConfig): Promise<DriftReport> {
 
   // Run structural checkers
   allIssues.push(...checkIndexSync(projectRoot, scaffoldRoot));
+
+  // Run coverage checkers (reality → scaffold direction)
+  allIssues.push(...checkScriptCoverage(scaffoldFiles, projectRoot));
 
   const score = computeScore(allIssues);
 
