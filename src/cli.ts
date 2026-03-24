@@ -15,6 +15,7 @@ program
   .description("Detect drift between scaffold files and codebase reality")
   .option("--json", "Output full drift report as JSON")
   .option("--quiet", "Single-line summary only")
+  .option("--fix", "Run sync to fix any issues found")
   .action(async (opts) => {
     try {
       const config = findConfig();
@@ -29,8 +30,14 @@ program
         reportConsole(report);
       }
 
-      // Exit with code 1 if there are errors
+      // If --fix and there are issues, jump to sync
       const hasErrors = report.issues.some((i) => i.severity === "error");
+      if (opts.fix && hasErrors) {
+        const { runSync } = await import("./sync/index.js");
+        await runSync(config, {});
+        return;
+      }
+
       if (hasErrors) process.exit(1);
     } catch (err) {
       console.error((err as Error).message);

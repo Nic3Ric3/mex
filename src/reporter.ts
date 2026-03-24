@@ -14,6 +14,12 @@ const severityIcon: Record<Severity, string> = {
 };
 
 export function reportConsole(report: DriftReport): void {
+  // Show score at top so it's visible before scrolling through issues
+  if (report.issues.length > 0) {
+    printSummary(report);
+    console.log();
+  }
+
   const grouped = groupByFile(report.issues);
 
   for (const [file, issues] of Object.entries(grouped)) {
