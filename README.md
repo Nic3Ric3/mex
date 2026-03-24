@@ -21,7 +21,7 @@ AI agents forget everything between sessions. mex gives them permanent, navigabl
 
 Every session starts cold. The agent has no idea what it built yesterday, what conventions you agreed on, or what broke last week. Developers compensate by stuffing everything into CLAUDE.md — but that floods the context window, burns tokens, and degrades attention. Meanwhile, the project changes and nobody updates the docs. The agent's understanding drifts from reality.
 
-mex is a structured markdown scaffold with a CLI that keeps it honest. The scaffold gives agents persistent project knowledge through navigable files — architecture, conventions, decisions, patterns. The CLI detects when those files drift from the actual codebase, and targets AI to fix only what's broken.
+mex is a structured markdown scaffold with a CLI that keeps it honest. The scaffold gives agents persistent project knowledge through navigable files — architecture, conventions, decisions, patterns. The CLI detects when those files drift from the actual codebase, and targets AI to fix only what's broken. The scaffold grows automatically — after every task, the agent updates project state and creates patterns from real work.
 
 ## Install
 
@@ -34,7 +34,7 @@ The setup script auto-builds the CLI, pre-scans your codebase, and runs a target
 
 ## Drift Detection
 
-Seven checkers validate your scaffold against the real codebase. Zero tokens, zero AI.
+Eight checkers validate your scaffold against the real codebase. Zero tokens, zero AI.
 
 | Checker | What it catches |
 |---------|----------------|
@@ -45,6 +45,7 @@ Seven checkers validate your scaffold against the real codebase. Zero tokens, ze
 | **command** | `npm run X` / `make X` referencing scripts that don't exist |
 | **dependency** | Claimed dependencies missing from `package.json` |
 | **cross-file** | Same dependency with different versions across files |
+| **script-coverage** | `package.json` scripts not mentioned in any scaffold file |
 
 Scoring: starts at 100. Deducts -10 per error, -3 per warning, -1 per info.
 
@@ -71,22 +72,24 @@ cd .mex && npm install && npm run build && cd ..
 
 | Command | What it does |
 |---------|-------------|
-| `node .mex/dist/cli.js check` | Run all 7 checkers, output drift score and issues |
-| `node .mex/dist/cli.js check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
-| `node .mex/dist/cli.js check --json` | Full report as JSON for programmatic use |
-| `node .mex/dist/cli.js init` | Pre-scan codebase, build structured brief for AI |
-| `node .mex/dist/cli.js init --json` | Raw scanner brief as JSON |
-| `node .mex/dist/cli.js sync` | Detect drift → build per-file prompts → AI fixes → verify |
-| `node .mex/dist/cli.js sync --dry-run` | Preview targeted prompts without executing |
-| `node .mex/dist/cli.js sync --warnings` | Include warning-only files in sync |
-| `node .mex/dist/cli.js watch` | Install post-commit hook for automatic drift score |
-| `node .mex/dist/cli.js watch --uninstall` | Remove the hook |
+| `mex check` | Run all 8 checkers, output drift score and issues |
+| `mex check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
+| `mex check --json` | Full report as JSON for programmatic use |
+| `mex check --fix` | Check and jump straight to sync if errors found |
+| `mex sync` | Detect drift → choose mode → AI fixes → verify → repeat |
+| `mex sync --dry-run` | Preview targeted prompts without executing |
+| `mex sync --warnings` | Include warning-only files in sync |
+| `mex init` | Pre-scan codebase, build structured brief for AI |
+| `mex init --json` | Raw scanner brief as JSON |
+| `mex watch` | Install post-commit hook (silent on perfect score) |
+| `mex watch --uninstall` | Remove the hook |
+| `mex commands` | List all commands and scripts with descriptions |
 
-If you ran `npm link`, replace `node .mex/dist/cli.js` with `mex` in all commands above.
+Replace `mex` with `node .mex/dist/cli.js` if not globally linked. To link: `cd .mex && npm link && cd ..`
 
 ### Scripts
 
-These run from inside `.mex/` or with the path prefix. They auto-build the CLI if needed.
+These run from your project root. They auto-build the CLI if needed. All support `--help`.
 
 ```bash
 bash .mex/setup.sh       # First-time setup — scan, prompt, populate
@@ -147,9 +150,13 @@ ROUTER.md routing table → loads relevant context file for this task
 context file → points to pattern file if task-specific guidance exists
     ↓
 Agent executes with full project context, minimal token cost
+    ↓
+After task: agent updates scaffold (GROW step)
+    ↓
+New patterns, updated project state — scaffold grows from real work
 ```
 
-CLAUDE.md stays at ~120 tokens. The agent navigates to only what it needs.
+CLAUDE.md stays at ~120 tokens. The agent navigates to only what it needs. After every task, the agent updates the scaffold — creating patterns from new task types, updating project state, fixing stale context. The scaffold compounds over time.
 
 ## File Structure
 
