@@ -46,6 +46,19 @@ ok()    { printf "${GREEN}✓${NC} %s\n" "$1"; }
 warn()  { printf "${YELLOW}!${NC} %s\n" "$1"; }
 header(){ printf "\n${BOLD}%s${NC}\n" "$1"; }
 
+# Spinner for background tasks
+spin() {
+  local pid=$1 msg=$2
+  local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+  local i=0
+  while kill -0 "$pid" 2>/dev/null; do
+    printf "\r  ${BLUE}${frames[$i]}${NC} %s" "$msg"
+    i=$(( (i + 1) % ${#frames[@]} ))
+    sleep 0.1
+  done
+  printf "\r\033[2K"  # clear the spinner line
+}
+
 banner() {
   printf "${ROYAL}"
   cat <<'ART'
@@ -84,6 +97,17 @@ safe_copy() {
   cp "$src" "$dest"
   ok "Copied $dest"
 }
+
+# ─────────────────────────────────────────────────────────────
+# Banner
+# ─────────────────────────────────────────────────────────────
+
+banner
+echo ""
+if [ "$DRY_RUN" -eq 1 ]; then
+  warn "DRY RUN — no files will be created or modified"
+  echo ""
+fi
 
 # ─────────────────────────────────────────────────────────────
 # Step 1 — Build CLI engine (if Node available)
@@ -125,13 +149,6 @@ echo ""
 # ─────────────────────────────────────────────────────────────
 # Step 2 — Detect project state
 # ─────────────────────────────────────────────────────────────
-
-banner
-echo ""
-if [ "$DRY_RUN" -eq 1 ]; then
-  warn "DRY RUN — no files will be created or modified"
-fi
-echo ""
 
 detect_state() {
   local source_file_count scaffold_populated
@@ -202,8 +219,9 @@ echo "  4) GitHub Copilot"
 echo "  5) Multiple (select next)"
 echo "  6) None / other (skip)"
 echo ""
-printf "Choice [1-6]: "
+printf "Choice [1-6] (default: 1): "
 read -r tool_choice
+tool_choice="${tool_choice:-1}"
 
 SELECTED_CLAUDE=0
 
@@ -254,8 +272,12 @@ echo ""
 
 SCANNER_BRIEF=""
 if [ "$PROJECT_STATE" != "fresh" ] && [ -n "$MEX_CMD" ]; then
-  info "Running mex pre-analysis scanner..."
-  SCANNER_BRIEF=$(cd "$PROJECT_DIR" && $MEX_CMD init --json 2>&1) || SCANNER_BRIEF=""
+  # Run scanner in background with spinner
+  (cd "$PROJECT_DIR" && $MEX_CMD init --json 2>&1 > /tmp/mex_scanner_$$.json) &
+  SCANNER_PID=$!
+  spin $SCANNER_PID "Scanning codebase..."
+  wait $SCANNER_PID 2>/dev/null && SCANNER_BRIEF=$(cat /tmp/mex_scanner_$$.json) || SCANNER_BRIEF=""
+  rm -f /tmp/mex_scanner_$$.json
   # If the output looks like an error (not JSON), clear it
   if [ -n "$SCANNER_BRIEF" ] && ! echo "$SCANNER_BRIEF" | head -1 | grep -q '^{'; then
     warn "Scanner error: $(echo "$SCANNER_BRIEF" | head -1)"
@@ -486,8 +508,22 @@ if [ "$SELECTED_CLAUDE" -eq 1 ] && command -v claude &>/dev/null; then
   claude "$SETUP_PROMPT"
 
   echo ""
-  ok "Done. Verify by starting a fresh session and asking:"
-  info "  \"Read .mex/ROUTER.md and tell me what you know about this project.\""
+  ok "Setup complete."
+  echo ""
+  header "What's next"
+  echo ""
+  info "Verify — start a fresh session and ask:"
+  echo "    \"Read .mex/ROUTER.md and tell me what you know about this project.\""
+  echo ""
+  info "Available commands (run from project root):"
+  echo "    node .mex/dist/cli.js check          Drift score — are scaffold files still accurate?"
+  echo "    node .mex/dist/cli.js check --quiet   One-liner drift score"
+  echo "    node .mex/dist/cli.js sync            Fix drift — AI updates only what's broken"
+  echo "    node .mex/dist/cli.js watch           Auto-check drift after every commit"
+  echo "    bash .mex/sync.sh                     Interactive sync menu"
+  echo "    bash .mex/update.sh                   Pull latest mex without touching your content"
+  echo ""
+  info "Tip: run ${BOLD}cd .mex && npm link && cd ..${NC} to use ${BOLD}mex${NC} instead of ${BOLD}node .mex/dist/cli.js${NC}"
 
 else
   # Fallback — print the prompt for manual use
@@ -513,5 +549,15 @@ else
   echo ""
   echo "─────────────────── COPY ABOVE THIS LINE ───────────────────"
   echo ""
-  ok "Done. Paste the prompt above into your agent to populate the scaffold."
+  ok "Paste the prompt above into your agent to populate the scaffold."
+  echo ""
+  header "After your agent finishes, you can use"
+  echo ""
+  echo "    node .mex/dist/cli.js check          Drift score — are scaffold files still accurate?"
+  echo "    node .mex/dist/cli.js sync            Fix drift — AI updates only what's broken"
+  echo "    node .mex/dist/cli.js watch           Auto-check drift after every commit"
+  echo "    bash .mex/sync.sh                     Interactive sync menu"
+  echo "    bash .mex/update.sh                   Pull latest mex without touching your content"
+  echo ""
+  info "Tip: run ${BOLD}cd .mex && npm link && cd ..${NC} to use ${BOLD}mex${NC} instead of ${BOLD}node .mex/dist/cli.js${NC}"
 fi
