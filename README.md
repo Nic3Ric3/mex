@@ -56,12 +56,7 @@ Scoring: starts at 100. Deducts -10 per error, -3 per warning, -1 per info.
 The CLI is built automatically during `setup.sh`. All commands run from your **project root** (not from inside `.mex/`).
 
 ```bash
-# Using node directly
 node .mex/dist/cli.js check
-
-# Or link it globally for shorter commands
-cd .mex && npm link && cd ..
-mex check
 ```
 
 If you need to rebuild manually:
@@ -70,26 +65,35 @@ If you need to rebuild manually:
 cd .mex && npm install && npm run build && cd ..
 ```
 
+**Optional:** link globally to use `mex` instead of `node .mex/dist/cli.js`:
+
+```bash
+cd .mex && npm link && cd ..
+mex check   # works after linking
+```
+
 ### Commands
 
 | Command | What it does |
 |---------|-------------|
-| `mex check` | Run all 8 checkers, output drift score and issues |
-| `mex check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
-| `mex check --json` | Full report as JSON for programmatic use |
-| `mex check --fix` | Check and jump straight to sync if errors found |
-| `mex sync` | Detect drift → choose mode → AI fixes → verify → repeat |
-| `mex sync --dry-run` | Preview targeted prompts without executing |
-| `mex sync --warnings` | Include warning-only files in sync |
-| `mex init` | Pre-scan codebase, build structured brief for AI |
-| `mex init --json` | Raw scanner brief as JSON |
-| `mex watch` | Install post-commit hook (silent on perfect score) |
-| `mex watch --uninstall` | Remove the hook |
-| `mex commands` | List all commands and scripts with descriptions |
+| `node .mex/dist/cli.js check` | Run all 8 checkers, output drift score and issues |
+| `node .mex/dist/cli.js check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
+| `node .mex/dist/cli.js check --json` | Full report as JSON for programmatic use |
+| `node .mex/dist/cli.js check --fix` | Check and jump straight to sync if errors found |
+| `node .mex/dist/cli.js sync` | Detect drift → choose mode → AI fixes → verify → repeat |
+| `node .mex/dist/cli.js sync --dry-run` | Preview targeted prompts without executing |
+| `node .mex/dist/cli.js sync --warnings` | Include warning-only files in sync |
+| `node .mex/dist/cli.js init` | Pre-scan codebase, build structured brief for AI |
+| `node .mex/dist/cli.js init --json` | Raw scanner brief as JSON |
+| `node .mex/dist/cli.js watch` | Install post-commit hook (silent on perfect score) |
+| `node .mex/dist/cli.js watch --uninstall` | Remove the hook |
+| `node .mex/dist/cli.js commands` | List all commands and scripts with descriptions |
 
-Replace `mex` with `node .mex/dist/cli.js` if not globally linked. To link: `cd .mex && npm link && cd ..`
+If globally linked, replace `node .mex/dist/cli.js` with `mex`.
 
-### Scripts
+### Shell Scripts
+
+The shell scripts are **bash scripts** and require a bash-compatible shell. On macOS and Linux they work out of the box. On Windows, use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), [Git Bash](https://gitforwindows.org/), or any bash-compatible terminal.
 
 These run from your project root. They auto-build the CLI if needed. All support `--help`.
 
@@ -98,6 +102,8 @@ bash .mex/setup.sh       # First-time setup — scan, prompt, populate
 bash .mex/sync.sh        # Interactive menu — check, sync, or export prompt
 bash .mex/update.sh      # Pull latest mex infrastructure, keep your content
 ```
+
+> **Note:** The CLI commands (`node .mex/dist/cli.js ...`) work on any platform with Node.js, including Windows cmd and PowerShell. Only the shell scripts above require bash.
 
 ## Before / After
 
