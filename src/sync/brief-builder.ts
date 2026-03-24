@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { resolve, dirname, basename } from "node:path";
+import { globSync } from "glob";
 import { getGitDiff } from "../git.js";
 import type { SyncTarget } from "../types.js";
 
@@ -29,6 +30,9 @@ export async function buildSyncBrief(
     ? await getGitDiff(claimedPaths, projectRoot)
     : target.gitDiff ?? "";
 
+  // For MISSING_PATH issues, find what actually exists nearby
+  const fileContext = buildFileContext(target, projectRoot);
+
   let prompt = `The following scaffold file has drift issues that need fixing:
 
 **File:** ${target.file}
@@ -41,6 +45,13 @@ ${issueList}
 ${fileContent}
 \`\`\``;
 
+  if (fileContext) {
+    prompt += `
+
+**Filesystem context (what actually exists):**
+${fileContext}`;
+  }
+
   if (diff) {
     prompt += `
 
@@ -52,7 +63,69 @@ ${diff}
 
   prompt += `
 
-Update the file to fix these issues. Only change what's necessary — do not rewrite sections that are correct.`;
+Update the file to fix these issues. Only change what's necessary — do not rewrite sections that are correct.
+When a referenced path no longer exists, find the correct current path from the filesystem context above and update the reference.`;
 
   return prompt;
+}
+
+/** For missing path issues, list actual files in the relevant directories */
+function buildFileContext(
+  target: SyncTarget,
+  projectRoot: string
+): string | null {
+  const missingPaths = target.issues
+    .filter((i) => i.code === "MISSING_PATH" && i.claim?.kind === "path")
+    .map((i) => i.claim!.value);
+
+  if (missingPaths.length === 0) return null;
+
+  const sections: string[] = [];
+  const listedDirs = new Set<string>();
+
+  for (const missing of missingPaths) {
+    // Get the directory the missing file was expected in
+    const dir = missing.includes("/") ? dirname(missing) : ".";
+    const dirKey = dir === "." ? "root" : dir;
+
+    // List the directory contents (skip if already listed)
+    if (!listedDirs.has(dirKey)) {
+      listedDirs.add(dirKey);
+
+      const absDir = resolve(projectRoot, dir);
+      if (existsSync(absDir)) {
+        try {
+          const files = readdirSync(absDir)
+            .filter((f) => !f.startsWith("."))
+            .sort();
+          if (files.length > 0) {
+            sections.push(`\`${dir}/\` contains: ${files.join(", ")}`);
+          }
+        } catch {
+          // skip unreadable dirs
+        }
+      }
+    }
+
+    // Fuzzy search: find files with similar names anywhere in the project
+    const name = basename(missing);
+    const ext = name.includes(".") ? name.split(".").pop() : null;
+    if (ext) {
+      const matches = globSync(`**/*.${ext}`, {
+        cwd: projectRoot,
+        ignore: ["node_modules/**", ".mex/**", "dist/**", ".git/**"],
+        maxDepth: 5,
+      });
+
+      if (matches.length > 0 && matches.length <= 20) {
+        sections.push(
+          `All \`.${ext}\` files in project: ${matches.join(", ")}`
+        );
+        // Only list once per extension
+        break;
+      }
+    }
+  }
+
+  return sections.length > 0 ? sections.join("\n") : null;
 }
