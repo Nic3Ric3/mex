@@ -10,6 +10,16 @@ DRY_RUN=0
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
+    --help|-h)
+      echo "Usage: .mex/setup.sh [--dry-run]"
+      echo ""
+      echo "First-time setup — detect project state, copy tool config, populate scaffold."
+      echo ""
+      echo "Options:"
+      echo "  --dry-run   Show what would happen without making changes"
+      echo "  --help      Show this help"
+      exit 0
+      ;;
   esac
 done
 

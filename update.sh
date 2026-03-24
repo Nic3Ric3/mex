@@ -5,6 +5,18 @@ set -euo pipefail
 # mex update — pull latest infrastructure files without touching populated content
 # ─────────────────────────────────────────────────────────────
 
+for arg in "$@"; do
+  case "$arg" in
+    --help|-h)
+      echo "Usage: .mex/update.sh"
+      echo ""
+      echo "Pull latest mex infrastructure files without touching your populated content."
+      echo "Rebuilds CLI automatically if source files changed."
+      exit 0
+      ;;
+  esac
+done
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_URL="https://github.com/theDakshJaitly/mex.git"
 TMP_DIR=""
@@ -90,11 +102,28 @@ if [ ! -f "$SCRIPT_DIR/ROUTER.md" ]; then
   exit 1
 fi
 
+# Get current commit hash
+CURRENT_HASH=""
+if [ -d "$SCRIPT_DIR/.git" ]; then
+  CURRENT_HASH=$(cd "$SCRIPT_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+elif [ -f "$SCRIPT_DIR/.mex-version" ]; then
+  CURRENT_HASH=$(cat "$SCRIPT_DIR/.mex-version" 2>/dev/null || echo "unknown")
+fi
+
 # Fetch latest
 header "Fetching latest mex..."
 TMP_DIR=$(mktemp -d)
 git clone --quiet --depth 1 "$REPO_URL" "$TMP_DIR"
+LATEST_HASH=$(cd "$TMP_DIR" && git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 ok "Fetched latest from GitHub"
+
+if [ -n "$CURRENT_HASH" ] && [ "$CURRENT_HASH" != "unknown" ]; then
+  if [ "$CURRENT_HASH" = "$LATEST_HASH" ]; then
+    info "Current: ${CURRENT_HASH} — already on latest"
+  else
+    info "Current: ${CURRENT_HASH} → Latest: ${LATEST_HASH}"
+  fi
+fi
 echo ""
 
 # Track changes
@@ -243,6 +272,9 @@ if [ ${#STRUCTURAL_NOTES[@]} -gt 0 ]; then
     warn "$note"
   done
 fi
+
+# Save version hash for future reference
+echo "$LATEST_HASH" > "$SCRIPT_DIR/.mex-version"
 
 echo ""
 ok "Done. Your populated content files were not touched."

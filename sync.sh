@@ -13,6 +13,16 @@ DRY_RUN=0
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
+    --help|-h)
+      echo "Usage: .mex/sync.sh [--dry-run]"
+      echo ""
+      echo "Interactive sync — detect drift and fix it with targeted or full resync."
+      echo ""
+      echo "Options:"
+      echo "  --dry-run   Show what needs fixing without executing"
+      echo "  --help      Show this help"
+      exit 0
+      ;;
   esac
 done
 

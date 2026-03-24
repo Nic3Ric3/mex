@@ -5,11 +5,24 @@ import type { MexConfig } from "./types.js";
 
 const HOOK_MARKER = "# mex-drift-check";
 
-const HOOK_CONTENT = `#!/bin/sh
+function buildHookContent(config: MexConfig): string {
+  const cliPath = resolve(config.scaffoldRoot, "dist", "cli.js");
+  // Use local CLI if built, otherwise fall back to npx
+  const cmd = existsSync(cliPath)
+    ? `node "${cliPath}" check --quiet`
+    : "npx mex check --quiet";
+
+  return `#!/bin/sh
 ${HOOK_MARKER}
 # Auto-installed by mex watch — runs drift check after each commit
-npx mex check --quiet || true
+SCORE=$(${cmd} 2>&1) || true
+# Only show output if there are issues (not a perfect score)
+case "$SCORE" in
+  *"100/100"*) ;;
+  *) echo "$SCORE" ;;
+esac
 `;
+}
 
 export async function manageHook(
   config: MexConfig,
@@ -22,10 +35,12 @@ export async function manageHook(
     return;
   }
 
-  installHook(hookPath);
+  installHook(hookPath, config);
 }
 
-function installHook(hookPath: string): void {
+function installHook(hookPath: string, config: MexConfig): void {
+  const hookContent = buildHookContent(config);
+
   if (existsSync(hookPath)) {
     const existing = readFileSync(hookPath, "utf-8");
     if (existing.includes(HOOK_MARKER)) {
@@ -34,7 +49,7 @@ function installHook(hookPath: string): void {
     }
 
     // Append to existing hook
-    const updated = existing.trimEnd() + "\n\n" + HOOK_CONTENT;
+    const updated = existing.trimEnd() + "\n\n" + hookContent;
     writeFileSync(hookPath, updated);
     chmodSync(hookPath, 0o755);
     console.log(
@@ -43,7 +58,7 @@ function installHook(hookPath: string): void {
     return;
   }
 
-  writeFileSync(hookPath, HOOK_CONTENT);
+  writeFileSync(hookPath, hookContent);
   chmodSync(hookPath, 0o755);
   console.log(chalk.green("Installed mex post-commit hook."));
 }
@@ -62,7 +77,7 @@ function uninstallHook(hookPath: string): void {
     return;
   }
 
-  // Remove mex section
+  // Remove mex section (everything between marker and next non-mex line)
   const lines = content.split("\n");
   const filtered: string[] = [];
   let inMexBlock = false;
@@ -72,14 +87,17 @@ function uninstallHook(hookPath: string): void {
       inMexBlock = true;
       continue;
     }
-    if (inMexBlock && line.startsWith("npx mex")) {
+    if (inMexBlock) {
+      // Skip lines that are part of the mex hook block
+      if (line.startsWith("#") || line.startsWith("SCORE=") ||
+          line.startsWith("case") || line.startsWith("  *") ||
+          line.startsWith("esac") || line.startsWith("npx mex") ||
+          line.startsWith("node ") || line.trim() === "") {
+        continue;
+      }
+      // Non-mex line found — stop skipping
       inMexBlock = false;
-      continue;
     }
-    if (inMexBlock && line.startsWith("#")) {
-      continue;
-    }
-    inMexBlock = false;
     filtered.push(line);
   }
 

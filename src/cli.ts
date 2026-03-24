@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import { Command } from "commander";
 import { findConfig } from "./config.js";
 import { reportConsole, reportQuiet, reportJSON } from "./reporter.js";
@@ -98,6 +99,33 @@ program
       console.error((err as Error).message);
       process.exit(1);
     }
+  });
+
+// ── Quick Reference ──
+program
+  .command("commands")
+  .description("List all available commands and scripts")
+  .action(() => {
+    console.log(chalk.bold("\nCLI Commands") + chalk.dim("  (run from project root)\n"));
+    console.log("  mex check              Drift score — are scaffold files still accurate?");
+    console.log("  mex check --quiet      One-liner drift score");
+    console.log("  mex check --json       Full drift report as JSON");
+    console.log("  mex check --fix        Check and fix any errors found");
+    console.log("  mex sync               Fix drift — Claude updates only what's broken");
+    console.log("  mex sync --dry-run     Preview fix prompts without running them");
+    console.log("  mex sync --warnings    Include warning-only files in sync");
+    console.log("  mex init               Pre-scan codebase, build brief for AI");
+    console.log("  mex init --json        Scanner brief as JSON");
+    console.log("  mex watch              Install post-commit hook for auto drift score");
+    console.log("  mex watch --uninstall  Remove the post-commit hook");
+    console.log();
+    console.log(chalk.bold("Shell Scripts") + chalk.dim("  (run from project root)\n"));
+    console.log("  bash .mex/setup.sh     First-time setup — scan, prompt, populate scaffold");
+    console.log("  bash .mex/sync.sh      Interactive sync menu — check, sync, or export prompt");
+    console.log("  bash .mex/update.sh    Pull latest mex infrastructure, keep your content");
+    console.log();
+    console.log(chalk.dim("Replace 'mex' with 'node .mex/dist/cli.js' if not globally linked."));
+    console.log();
   });
 
 program.parse();
