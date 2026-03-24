@@ -34,6 +34,19 @@ warn()  { printf "${YELLOW}!${NC} %s\n" "$1"; }
 err()   { printf "${RED}✗${NC} %s\n" "$1"; }
 header(){ printf "\n${BOLD}%s${NC}\n" "$1"; }
 
+# Spinner for background tasks
+spin() {
+  local pid=$1 msg=$2
+  local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
+  local i=0
+  while kill -0 "$pid" 2>/dev/null; do
+    printf "\r  ${BLUE}${frames[$i]}${NC} %s" "$msg"
+    i=$(( (i + 1) % ${#frames[@]} ))
+    sleep 0.1
+  done
+  printf "\r\033[2K"  # clear the spinner line
+}
+
 banner() {
   printf "${ROYAL}"
   cat <<'ART'
@@ -129,8 +142,9 @@ if [ -n "$MEX_CMD" ]; then
   echo "  3) Show me the prompts — I'll paste them manually"
   echo "  4) Exit — I'll fix it myself"
   echo ""
-  printf "Choice [1-4]: "
+  printf "Choice [1-4] (default: 1): "
   read -r sync_choice
+  sync_choice="${sync_choice:-1}"
 
   case "$sync_choice" in
     1)
@@ -174,10 +188,13 @@ When done, report:
 - Any slots that could not be filled with confidence'
 
       if command -v claude &>/dev/null; then
-        claude "$SYNC_PROMPT"
+        claude -p "$SYNC_PROMPT" > /dev/null 2>&1 &
+        CLAUDE_PID=$!
+        spin $CLAUDE_PID "Running full resync (this may take a few minutes)..."
+        wait $CLAUDE_PID 2>/dev/null
+        ok "Full resync complete."
         echo ""
-        ok "Full resync complete. Running verification..."
-        echo ""
+        header "Verification"
         $MEX_CMD check 2>&1 || true
       else
         echo ""

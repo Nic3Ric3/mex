@@ -1,113 +1,226 @@
 import chalk from "chalk";
-import { spawnSync } from "node:child_process";
+import { spawn } from "node:child_process";
+import { createInterface } from "node:readline";
 import type { MexConfig, SyncTarget, DriftIssue } from "../types.js";
 import { runDriftCheck } from "../drift/index.js";
 import { buildSyncBrief } from "./brief-builder.js";
-import { verifySync } from "./verifier.js";
 
-/** Run targeted sync: detect → brief → AI → verify */
+const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
+function startSpinner(msg: string): () => void {
+  let i = 0;
+  const id = setInterval(() => {
+    process.stdout.write(
+      `\r  ${chalk.blue(SPINNER_FRAMES[i])} ${msg}`
+    );
+    i = (i + 1) % SPINNER_FRAMES.length;
+  }, 80);
+  return () => {
+    clearInterval(id);
+    process.stdout.write("\r\x1b[2K"); // clear line
+  };
+}
+
+function askUser(question: string): Promise<string> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+function runClaude(brief: string, cwd: string): Promise<{ ok: boolean }> {
+  return new Promise((resolve) => {
+    const child = spawn("claude", ["-p", brief], {
+      cwd,
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 300_000,
+    });
+
+    child.on("close", (code) => {
+      resolve({ ok: code === 0 || code === null });
+    });
+
+    child.on("error", () => {
+      resolve({ ok: false });
+    });
+  });
+}
+
+/** Run targeted sync: detect → brief → AI → verify → ask → loop */
 export async function runSync(
   config: MexConfig,
   opts: { dryRun?: boolean; includeWarnings?: boolean }
 ): Promise<void> {
-  // Step 1: Run drift check
-  console.log(chalk.bold("Running drift check..."));
-  const report = await runDriftCheck(config);
+  let cycle = 0;
 
-  if (report.issues.length === 0) {
-    console.log(chalk.green("No drift detected. Everything is in sync."));
-    return;
-  }
+  while (true) {
+    cycle++;
 
-  console.log(
-    chalk.yellow(
-      `Found ${report.issues.length} issues across ${report.filesChecked} files (score: ${report.score}/100)`
-    )
-  );
-
-  // Step 2: Group issues by file to create sync targets
-  // By default, only sync files with at least one error (skip warning-only files)
-  const relevantIssues = opts.includeWarnings
-    ? report.issues
-    : report.issues.filter((i) => {
-        // Keep all issues from files that have at least one error
-        const fileHasError = report.issues.some(
-          (other) => other.file === i.file && other.severity === "error"
-        );
-        return fileHasError;
-      });
-
-  if (relevantIssues.length === 0) {
-    console.log(chalk.green("No errors found. Only warnings remain (use --warnings to include them)."));
-    return;
-  }
-
-  const targets = groupIntoTargets(relevantIssues);
-
-  console.log(
-    chalk.bold(`\n${targets.length} file(s) need attention:\n`)
-  );
-
-  for (const target of targets) {
-    const errors = target.issues.filter((i) => i.severity === "error").length;
-    const warnings = target.issues.filter(
-      (i) => i.severity === "warning"
-    ).length;
-    console.log(
-      `  ${target.file} — ${errors} errors, ${warnings} warnings`
-    );
-  }
-
-  if (opts.dryRun) {
-    console.log(chalk.dim("\n--dry-run: showing prompts without executing\n"));
-    for (const target of targets) {
-      const brief = await buildSyncBrief(target, config.projectRoot);
-      console.log(chalk.bold.underline(`\n── ${target.file} ──`));
-      console.log(brief);
-      console.log();
+    // Step 1: Run drift check
+    if (cycle === 1) {
+      console.log(chalk.bold("Running drift check..."));
+    } else {
+      console.log(chalk.bold("\nRe-checking for remaining drift..."));
     }
-    return;
-  }
 
-  // Step 3: Build and execute prompts via claude CLI
-  console.log(chalk.bold("\nBuilding targeted prompts...\n"));
+    const report = await runDriftCheck(config);
 
-  for (const target of targets) {
-    const brief = await buildSyncBrief(target, config.projectRoot);
+    if (report.issues.length === 0) {
+      console.log(chalk.green("✓ No drift detected. Everything is in sync."));
+      return;
+    }
 
-    console.log(chalk.bold(`Syncing ${target.file}...`));
+    console.log(
+      chalk.yellow(
+        `Found ${report.issues.length} issues (score: ${report.score}/100)`
+      )
+    );
 
-    try {
-      // Pass prompt as CLI argument, inherit all stdio so user can
-      // interact with claude (approve edits, see output)
-      const result = spawnSync("claude", [brief], {
-        cwd: config.projectRoot,
-        stdio: "inherit",
-        timeout: 300_000,
-      });
+    // Step 2: Group issues by file
+    const relevantIssues = opts.includeWarnings
+      ? report.issues
+      : report.issues.filter((i) => {
+          const fileHasError = report.issues.some(
+            (other) => other.file === i.file && other.severity === "error"
+          );
+          return fileHasError;
+        });
 
-      if (result.status !== 0 && result.status !== null) {
-        throw new Error(`claude exited with code ${result.status}`);
-      }
-    } catch {
-      // Fall back to printing the prompt
+    if (relevantIssues.length === 0) {
       console.log(
-        chalk.yellow(
-          `\nCould not run claude CLI. Here's the prompt to paste manually:\n`
+        chalk.green(
+          "No errors found. Only warnings remain (use --warnings to include them)."
         )
       );
-      console.log(brief);
+      return;
     }
-  }
 
-  // Step 4: Verify
-  console.log(chalk.bold("\nVerifying fixes..."));
-  const verification = await verifySync(config);
-  console.log(
-    chalk.bold(
-      `Post-sync drift score: ${verification.report.score}/100`
-    )
-  );
+    const targets = groupIntoTargets(relevantIssues);
+
+    console.log(
+      chalk.bold(`\n${targets.length} file(s) need attention:\n`)
+    );
+
+    for (const target of targets) {
+      const errors = target.issues.filter((i) => i.severity === "error").length;
+      const warnings = target.issues.filter(
+        (i) => i.severity === "warning"
+      ).length;
+      console.log(
+        `  ${target.file} — ${errors} errors, ${warnings} warnings`
+      );
+    }
+
+    // Dry run — show prompts and exit
+    if (opts.dryRun) {
+      console.log(
+        chalk.dim("\n--dry-run: showing prompts without executing\n")
+      );
+      for (const target of targets) {
+        const brief = await buildSyncBrief(target, config.projectRoot);
+        console.log(chalk.bold.underline(`\n── ${target.file} ──`));
+        console.log(brief);
+        console.log();
+      }
+      return;
+    }
+
+    // Step 3: Fix each file with claude -p and spinner
+    console.log();
+    let allOk = true;
+
+    for (const target of targets) {
+      const brief = await buildSyncBrief(target, config.projectRoot);
+      const stopSpinner = startSpinner(`Fixing ${target.file}...`);
+
+      const result = await runClaude(brief, config.projectRoot);
+      stopSpinner();
+
+      if (result.ok) {
+        console.log(chalk.green(`  ✓ ${target.file}`));
+      } else {
+        console.log(chalk.red(`  ✗ ${target.file} — claude failed`));
+        allOk = false;
+      }
+    }
+
+    if (!allOk) {
+      // If claude wasn't available, fall back to printing prompts
+      console.log(
+        chalk.yellow(
+          "\nCould not run claude CLI. Here are the prompts to paste manually:\n"
+        )
+      );
+      for (const target of targets) {
+        const brief = await buildSyncBrief(target, config.projectRoot);
+        console.log(chalk.bold.underline(`\n── ${target.file} ──`));
+        console.log(brief);
+        console.log();
+      }
+      return;
+    }
+
+    // Step 4: Verify
+    const postReport = await runDriftCheck(config);
+    const scoreDelta = postReport.score - report.score;
+    const deltaStr =
+      scoreDelta > 0
+        ? chalk.green(`+${scoreDelta}`)
+        : scoreDelta === 0
+          ? chalk.yellow("+0")
+          : chalk.red(`${scoreDelta}`);
+
+    console.log(
+      chalk.bold(
+        `\nDrift score: ${report.score} → ${postReport.score}/100 (${deltaStr})`
+      )
+    );
+
+    // Step 5: Check if we should continue
+    const remainingErrors = postReport.issues.filter(
+      (i) => i.severity === "error"
+    ).length;
+    const remainingWarnings = postReport.issues.filter(
+      (i) => i.severity === "warning"
+    ).length;
+
+    if (remainingErrors === 0 && !opts.includeWarnings) {
+      if (remainingWarnings > 0) {
+        console.log(
+          chalk.dim(
+            `${remainingWarnings} warning(s) remain (use --warnings to include them).`
+          )
+        );
+      } else {
+        console.log(chalk.green("✓ All issues resolved."));
+      }
+      return;
+    }
+
+    if (postReport.score === 100) {
+      console.log(chalk.green("✓ Perfect score. All issues resolved."));
+      return;
+    }
+
+    // Ask user whether to continue
+    const remaining = opts.includeWarnings
+      ? remainingErrors + remainingWarnings
+      : remainingErrors;
+
+    const answer = await askUser(
+      `\n${remaining} issue(s) remain. Run another cycle? [Y/n] `
+    );
+
+    if (answer.toLowerCase() === "n") {
+      console.log(chalk.dim("Stopped. Run mex sync again anytime."));
+      return;
+    }
+
+    // Loop continues
+  }
 }
 
 function groupIntoTargets(issues: DriftIssue[]): SyncTarget[] {
