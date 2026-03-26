@@ -21,9 +21,17 @@
 
 AI agents forget everything between sessions. mex gives them permanent, navigable project memory.
 
-Every session starts cold. The agent has no idea what it built yesterday, what conventions you agreed on, or what broke last week. Developers compensate by stuffing everything into CLAUDE.md — but that floods the context window, burns tokens, and degrades attention. Meanwhile, the project changes and nobody updates the docs. The agent's understanding drifts from reality.
+Every session starts cold:
+
+- The agent has **no idea** what it built yesterday
+- It forgets the conventions you agreed on
+- It doesn't know what broke last week
+
+Developers compensate by stuffing everything into CLAUDE.md — but that floods the context window, burns tokens, and degrades attention. Meanwhile, the project changes and nobody updates the docs. The agent's understanding drifts from reality.
 
 mex is a structured markdown scaffold with a CLI that keeps it honest. The scaffold gives agents persistent project knowledge through navigable files — architecture, conventions, decisions, patterns. The CLI detects when those files drift from the actual codebase, and targets AI to fix only what's broken. The scaffold grows automatically — after every task, the agent updates project state and creates patterns from real work.
+
+Works with any stack — JavaScript, Python, Go, Rust, and more.
 
 ## Install
 
@@ -33,6 +41,8 @@ bash .mex/setup.sh
 ```
 
 The setup script auto-builds the CLI, pre-scans your codebase, and runs a targeted prompt to populate the scaffold. Takes about 5 minutes.
+
+> **Using `mex` shorthand:** Commands below use `mex` — run `cd .mex && npm link && cd ..` once to enable this. Or replace `mex` with `node .mex/dist/cli.js` if you prefer not to link globally.
 
 ## Drift Detection
 
@@ -51,12 +61,15 @@ Eight checkers validate your scaffold against the real codebase. Zero tokens, ze
 
 Scoring: starts at 100. Deducts -10 per error, -3 per warning, -1 per info.
 
+<!-- TODO: Add screenshot of `mex check` terminal output here -->
+![mex check output](screenshots/mex-check.jpg) 
+
 ## CLI
 
 The CLI is built automatically during `setup.sh`. All commands run from your **project root** (not from inside `.mex/`).
 
 ```bash
-node .mex/dist/cli.js check
+mex check
 ```
 
 If you need to rebuild manually:
@@ -65,31 +78,29 @@ If you need to rebuild manually:
 cd .mex && npm install && npm run build && cd ..
 ```
 
-**Optional:** link globally to use `mex` instead of `node .mex/dist/cli.js`:
-
-```bash
-cd .mex && npm link && cd ..
-mex check   # works after linking
-```
-
 ### Commands
 
 | Command | What it does |
 |---------|-------------|
-| `node .mex/dist/cli.js check` | Run all 8 checkers, output drift score and issues |
-| `node .mex/dist/cli.js check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
-| `node .mex/dist/cli.js check --json` | Full report as JSON for programmatic use |
-| `node .mex/dist/cli.js check --fix` | Check and jump straight to sync if errors found |
-| `node .mex/dist/cli.js sync` | Detect drift → choose mode → AI fixes → verify → repeat |
-| `node .mex/dist/cli.js sync --dry-run` | Preview targeted prompts without executing |
-| `node .mex/dist/cli.js sync --warnings` | Include warning-only files in sync |
-| `node .mex/dist/cli.js init` | Pre-scan codebase, build structured brief for AI |
-| `node .mex/dist/cli.js init --json` | Raw scanner brief as JSON |
-| `node .mex/dist/cli.js watch` | Install post-commit hook (silent on perfect score) |
-| `node .mex/dist/cli.js watch --uninstall` | Remove the hook |
-| `node .mex/dist/cli.js commands` | List all commands and scripts with descriptions |
+| `mex check` | Run all 8 checkers, output drift score and issues |
+| `mex check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
+| `mex check --json` | Full report as JSON for programmatic use |
+| `mex check --fix` | Check and jump straight to sync if errors found |
+| `mex sync` | Detect drift → choose mode → AI fixes → verify → repeat |
+| `mex sync --dry-run` | Preview targeted prompts without executing |
+| `mex sync --warnings` | Include warning-only files in sync |
+| `mex init` | Pre-scan codebase, build structured brief for AI |
+| `mex init --json` | Raw scanner brief as JSON |
+| `mex watch` | Install post-commit hook (silent on perfect score) |
+| `mex watch --uninstall` | Remove the hook |
+| `mex commands` | List all commands and scripts with descriptions |
 
-If globally linked, replace `node .mex/dist/cli.js` with `mex`.
+
+![mex sync output](screenshots/mex-sync.jpg)
+
+Running check after drift is fixed by sync
+
+![mex check after](screenshots/mex-check1.jpg) 
 
 ### Shell Scripts
 
@@ -107,7 +118,7 @@ bash .mex/update.sh      # Pull latest mex infrastructure, keep your content
 
 ## Before / After
 
-Real output from testing mex on [Agrow](https://github.com/), an AI-powered agricultural voice helpline (Python/Flask, Twilio, multi-provider pipeline).
+Real output from testing mex on Agrow, an AI-powered agricultural voice helpline (Python/Flask, Twilio, multi-provider pipeline).
 
 **Scaffold before setup:**
 ```markdown
