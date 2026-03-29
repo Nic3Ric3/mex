@@ -112,7 +112,7 @@ export function extractClaims(filePath: string, source: string): Claim[] {
       if (!text) return;
 
       // Check for version pattern: "React 18" or "Node v20"
-      const versionMatch = text.match(/^(.+?)\s+v?(\d[\d.]*\S*)$/);
+      const versionMatch = text.match(/^(.+?)\s+[v^~>=<]*(\d[\d.]*\S*)$/);
       if (versionMatch) {
         claims.push({
           kind: "dependency",
