@@ -44,4 +44,23 @@ describe("runPatternAdd", () => {
     const patternContent = readFileSync(join(tmpDir, "patterns", "my-pattern.md"), "utf8");
     expect(patternContent).toContain("name: my-pattern");
   });
+
+  it("throws an error for invalid pattern names", async () => {
+    await expect(
+      runPatternAdd({ projectRoot: tmpDir, scaffoldRoot: tmpDir }, "my pattern")
+    ).rejects.toThrow("Invalid pattern name");
+
+    await expect(
+      runPatternAdd({ projectRoot: tmpDir, scaffoldRoot: tmpDir }, "pattern!")
+    ).rejects.toThrow("Invalid pattern name");
+  });
+
+  it("appends to INDEX.md with a newline if it does not end with one", async () => {
+    writeFileSync(join(tmpDir, "patterns", "INDEX.md"), "| Pattern | Use when |", "utf8");
+
+    await runPatternAdd({ projectRoot: tmpDir, scaffoldRoot: tmpDir }, "newline-pattern");
+
+    const indexContent = readFileSync(join(tmpDir, "patterns", "INDEX.md"), "utf8");
+    expect(indexContent).toBe("| Pattern | Use when |\n| [newline-pattern.md](newline-pattern.md) | [description] |\n");
+  });
 });

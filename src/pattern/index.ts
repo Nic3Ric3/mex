@@ -1,9 +1,13 @@
 import { join } from "node:path";
-import { existsSync, writeFileSync, appendFileSync } from "node:fs";
+import { existsSync, writeFileSync, appendFileSync, mkdirSync, readFileSync } from "node:fs";
 import chalk from "chalk";
 import type { MexConfig } from "../types.js";
 
 export async function runPatternAdd(config: MexConfig, name: string) {
+  if (!/^[a-z0-9-]+$/i.test(name)) {
+    throw new Error(`Invalid pattern name '${name}'. Use only letters, numbers, and hyphens.`);
+  }
+
   const patternsDir = join(config.scaffoldRoot, "patterns");
   const patternPath = join(patternsDir, `${name}.md`);
   const indexPath = join(patternsDir, "INDEX.md");
@@ -48,13 +52,17 @@ last_updated: ${today}
 - [ ] If this is a new task type without a pattern, create one in \`patterns/\` and add to \`INDEX.md\`
 `;
 
+  mkdirSync(patternsDir, { recursive: true });
   writeFileSync(patternPath, template, "utf8");
 
   if (existsSync(indexPath)) {
-    const entry = `| [${name}.md](${name}.md) | [description] |\n`;
+    const currentIndex = readFileSync(indexPath, "utf8");
+    const newlinePrefix = currentIndex.length === 0 || currentIndex.endsWith("\n") ? "" : "\n";
+    const entry = `${newlinePrefix}| [${name}.md](${name}.md) | [description] |\n`;
     appendFileSync(indexPath, entry, "utf8");
   }
 
   console.log(chalk.green(`✓ Created pattern ${name}.md`));
   console.log(chalk.dim(`  Added entry to patterns/INDEX.md`));
+  console.log(chalk.yellow(`! Remember to edit patterns/INDEX.md and replace [description] with a real use case.`));
 }
