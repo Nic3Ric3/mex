@@ -85,6 +85,25 @@ program
     }
   });
 
+// ── Layer 4: Patterns ──
+const patternCmd = program
+  .command("pattern")
+  .description("Manage pattern files");
+
+patternCmd
+  .command("add <name>")
+  .description("Create a new pattern file and add it to the index")
+  .action(async (name) => {
+    try {
+      const config = findConfig();
+      const { runPatternAdd } = await import("./pattern/index.js");
+      await runPatternAdd(config, name);
+    } catch (err) {
+      console.error((err as Error).message);
+      process.exit(1);
+    }
+  });
+
 // ── Git Hook ──
 program
   .command("watch")
@@ -116,6 +135,7 @@ program
     console.log("  mex sync --warnings    Include warning-only files in sync");
     console.log("  mex init               Pre-scan codebase, build brief for AI");
     console.log("  mex init --json        Scanner brief as JSON");
+    console.log("  mex pattern add <name> Create a new pattern file");
     console.log("  mex watch              Install post-commit hook for auto drift score");
     console.log("  mex watch --uninstall  Remove the post-commit hook");
     console.log();
