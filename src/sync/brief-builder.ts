@@ -4,8 +4,42 @@ import { globSync } from "glob";
 import { getGitDiff } from "../git.js";
 import type { SyncTarget } from "../types.js";
 
-/** Build a targeted prompt for AI to fix a specific flagged file */
+/** Build a single combined prompt covering all targets */
+export async function buildCombinedBrief(
+  targets: SyncTarget[],
+  projectRoot: string
+): Promise<string> {
+  const sections: string[] = [];
+
+  for (const target of targets) {
+    sections.push(await buildFileSection(target, projectRoot));
+  }
+
+  return `The following scaffold files have drift issues that need fixing. Fix all of them in one pass.
+
+${sections.map((s, i) => `━━━ File ${i + 1}/${sections.length} ━━━\n\n${s}`).join("\n\n")}
+
+Update each file to fix its issues. Only change what's necessary — do not rewrite sections that are correct.
+When a referenced path no longer exists, find the correct current path from the filesystem context above and update the reference.`;
+}
+
+/** Build a targeted prompt for AI to fix a single file */
 export async function buildSyncBrief(
+  target: SyncTarget,
+  projectRoot: string
+): Promise<string> {
+  const section = await buildFileSection(target, projectRoot);
+
+  return `The following scaffold file has drift issues that need fixing:
+
+${section}
+
+Update the file to fix these issues. Only change what's necessary — do not rewrite sections that are correct.
+When a referenced path no longer exists, find the correct current path from the filesystem context above and update the reference.`;
+}
+
+/** Build the content section for a single target (no wrapper instructions) */
+async function buildFileSection(
   target: SyncTarget,
   projectRoot: string
 ): Promise<string> {
@@ -33,9 +67,7 @@ export async function buildSyncBrief(
   // For MISSING_PATH issues, find what actually exists nearby
   const fileContext = buildFileContext(target, projectRoot);
 
-  let prompt = `The following scaffold file has drift issues that need fixing:
-
-**File:** ${target.file}
+  let section = `**File:** ${target.file}
 
 **Issues found:**
 ${issueList}
@@ -46,14 +78,14 @@ ${fileContent}
 \`\`\``;
 
   if (fileContext) {
-    prompt += `
+    section += `
 
 **Filesystem context (what actually exists):**
 ${fileContext}`;
   }
 
   if (diff) {
-    prompt += `
+    section += `
 
 **Recent git changes in referenced paths:**
 \`\`\`diff
@@ -61,12 +93,7 @@ ${diff}
 \`\`\``;
   }
 
-  prompt += `
-
-Update the file to fix these issues. Only change what's necessary — do not rewrite sections that are correct.
-When a referenced path no longer exists, find the correct current path from the filesystem context above and update the reference.`;
-
-  return prompt;
+  return section;
 }
 
 /** For missing path issues, list actual files in the relevant directories */

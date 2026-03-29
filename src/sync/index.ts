@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
 import type { MexConfig, SyncTarget, DriftIssue } from "../types.js";
 import { runDriftCheck } from "../drift/index.js";
-import { buildSyncBrief } from "./brief-builder.js";
+import { buildSyncBrief, buildCombinedBrief } from "./brief-builder.js";
 
 function askUser(question: string): Promise<string> {
   const rl = createInterface({ input: process.stdin, output: process.stdout });
@@ -94,17 +94,14 @@ export async function runSync(
       );
     }
 
-    // Dry run — show prompts and exit
+    // Dry run — show combined prompt and exit
     if (opts.dryRun) {
       console.log(
-        chalk.dim("\n--dry-run: showing prompts without executing\n")
+        chalk.dim("\n--dry-run: showing prompt without executing\n")
       );
-      for (const target of targets) {
-        const brief = await buildSyncBrief(target, config.projectRoot);
-        console.log(chalk.bold.underline(`\n── ${target.file} ──`));
-        console.log(brief);
-        console.log();
-      }
+      const brief = await buildCombinedBrief(targets, config.projectRoot);
+      console.log(brief);
+      console.log();
       return;
     }
 
@@ -136,31 +133,23 @@ export async function runSync(
       }
     }
 
-    // Show prompts mode — print and exit
+    // Show prompts mode — print combined prompt and exit
     if (mode === "prompts") {
-      for (const target of targets) {
-        const brief = await buildSyncBrief(target, config.projectRoot);
-        console.log(chalk.bold.underline(`\n── ${target.file} ──`));
-        console.log(brief);
-        console.log();
-      }
+      const brief = await buildCombinedBrief(targets, config.projectRoot);
+      console.log(brief);
+      console.log();
       return;
     }
 
-    // Step 3: Fix each file interactively
+    // Step 3: Fix all files in one interactive session
     console.log();
+    console.log(chalk.bold(`\nSending all ${targets.length} file(s) to Claude in one session...\n`));
 
-    for (let j = 0; j < targets.length; j++) {
-      const target = targets[j];
-      const fileLabel = `[${j + 1}/${targets.length}] ${target.file}`;
+    const brief = await buildCombinedBrief(targets, config.projectRoot);
+    const ok = runClaudeInteractive(brief, config.projectRoot);
 
-      console.log(chalk.bold(`\n── ${fileLabel} ──\n`));
-      const brief = await buildSyncBrief(target, config.projectRoot);
-      const ok = runClaudeInteractive(brief, config.projectRoot);
-
-      if (!ok) {
-        console.log(chalk.red(`  ✗ ${target.file} — Claude failed`));
-      }
+    if (!ok) {
+      console.log(chalk.red("  ✗ Claude session failed"));
     }
 
     // Step 4: Verify
