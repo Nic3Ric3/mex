@@ -13,7 +13,9 @@
 
 **mex**
 
+[![CI](https://github.com/theDakshJaitly/mex/actions/workflows/ci.yml/badge.svg)](https://github.com/theDakshJaitly/mex/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/mex.svg)](https://www.npmjs.com/package/mex)
 
 </div>
 
@@ -213,7 +215,11 @@ All config files contain identical content. `setup.sh` asks which tool you use a
 
 ## Contributing
 
-Contributions welcome. Open an issue or submit a PR.
+Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and guidelines.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 

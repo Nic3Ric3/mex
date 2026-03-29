@@ -1,11 +1,33 @@
 {
   "name": "mex",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync",
   "type": "module",
   "bin": {
     "mex": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "scaffold",
+    "drift-detection",
+    "documentation",
+    "cli",
+    "claude",
+    "cursor",
+    "copilot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theDakshJaitly/mex.git"
+  },
+  "author": "Daksh Jaitly",
+  "license": "MIT",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
