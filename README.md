@@ -157,6 +157,23 @@ patterns/
 └── add-rag-documents.md     # How to ingest new agricultural knowledge
 ```
 
+## Real World Results
+
+Independently tested by a community member on **OpenClaw** across 10 structured scenarios on a homelab setup (Ubuntu 24.04, Kubernetes, Docker, Ansible, Terraform, networking, monitoring). 10/10 tests passed. Drift score: 100/100.
+
+**Token usage before vs after mex:**
+
+| Scenario | Without mex | With mex | Saved |
+|----------|------------|---------|-------|
+| "How does K8s work?" | ~3,300 tokens | ~1,450 tokens | 56% |
+| "Open UFW port" | ~3,300 tokens | ~1,050 tokens | 68% |
+| "Explain Docker" | ~3,300 tokens | ~1,100 tokens | 67% |
+| Multi-context query | ~3,300 tokens | ~1,650 tokens | 50% |
+
+**~60% average token reduction per session.**
+
+Context is no longer all-or-nothing — loaded on demand, only what's relevant.
+
 ## How It Works
 
 ```
