@@ -35,6 +35,10 @@ mex is a structured markdown scaffold with a CLI that keeps it honest. The scaff
 
 Works with any stack — JavaScript, Python, Go, Rust, and more.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=theDakshJaitly/mex&type=Timeline)](https://star-history.com/#theDakshJaitly/mex&Timeline)
+
 ## Install
 
 ```bash
