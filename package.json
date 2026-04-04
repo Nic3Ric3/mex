@@ -1,5 +1,5 @@
 {
-  "name": "mex-cli",
+  "name": "mexy",
   "version": "0.2.0",
   "description": "CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync",
   "type": "module",

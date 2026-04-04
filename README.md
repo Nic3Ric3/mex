@@ -15,7 +15,7 @@
 
 [![CI](https://github.com/theDakshJaitly/mex/actions/workflows/ci.yml/badge.svg)](https://github.com/theDakshJaitly/mex/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/mex-cli.svg)](https://www.npmjs.com/package/mex-cli)
+[![npm version](https://img.shields.io/npm/v/mexy.svg)](https://www.npmjs.com/package/mexy)
 
 </div>
 
@@ -42,7 +42,7 @@ Works with any stack — JavaScript, Python, Go, Rust, and more.
 ## Install
 
 ```bash
-npx mex-cli setup
+npx mexy setup
 ```
 
 That's it. The setup command creates the `.mex/` scaffold, asks which AI tool you use, pre-scans your codebase, and generates a targeted prompt to populate everything. Takes about 5 minutes.
@@ -50,7 +50,7 @@ That's it. The setup command creates the `.mex/` scaffold, asks which AI tool yo
 For ongoing use, install as a dev dependency:
 
 ```bash
-npm install --save-dev mex-cli
+npm install --save-dev mexy
 ```
 
 Then add to your `package.json` scripts:

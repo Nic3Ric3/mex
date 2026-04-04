@@ -117,7 +117,7 @@ export async function runSetup(opts: { dryRun?: boolean } = {}): Promise<void> {
     const pkg = resolve(projectRoot, "package.json");
     if (existsSync(pkg)) {
       const pkgContent = readFileSync(pkg, "utf-8");
-      if (pkgContent.includes('"mex-cli"') || pkgContent.includes('"mex"')) {
+      if (pkgContent.includes('"mexy"') || pkgContent.includes('"mex"')) {
         throw new Error(
           "You're inside the mex repository itself. Run this from your project root instead."
         );
