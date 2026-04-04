@@ -15,7 +15,7 @@
 
 [![CI](https://github.com/theDakshJaitly/mex/actions/workflows/ci.yml/badge.svg)](https://github.com/theDakshJaitly/mex/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/mex.svg)](https://www.npmjs.com/package/mex)
+[![npm version](https://img.shields.io/npm/v/mex-cli.svg)](https://www.npmjs.com/package/mex-cli)
 
 </div>
 
@@ -42,13 +42,37 @@ Works with any stack — JavaScript, Python, Go, Rust, and more.
 ## Install
 
 ```bash
+npx mex-cli setup
+```
+
+That's it. The setup command creates the `.mex/` scaffold, asks which AI tool you use, pre-scans your codebase, and generates a targeted prompt to populate everything. Takes about 5 minutes.
+
+For ongoing use, install as a dev dependency:
+
+```bash
+npm install --save-dev mex-cli
+```
+
+Then add to your `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "mex": "mex check",
+    "mex:sync": "mex sync"
+  }
+}
+```
+
+<details>
+<summary>Alternative: install via git clone</summary>
+
+```bash
 git clone https://github.com/theDakshJaitly/mex.git .mex
 bash .mex/setup.sh
 ```
 
-The setup script auto-builds the CLI, pre-scans your codebase, and runs a targeted prompt to populate the scaffold. Takes about 5 minutes.
-
-> **Using `mex` shorthand:** Commands below use `mex` — run `cd .mex && npm link && cd ..` once to enable this. Or replace `mex` with `node .mex/dist/cli.js` if you prefer not to link globally.
+</details>
 
 ## Drift Detection
 
@@ -72,22 +96,18 @@ Scoring: starts at 100. Deducts -10 per error, -3 per warning, -1 per info.
 
 ## CLI
 
-The CLI is built automatically during `setup.sh`. All commands run from your **project root** (not from inside `.mex/`).
+All commands run from your **project root**.
 
 ```bash
 mex check
-```
-
-If you need to rebuild manually:
-
-```bash
-cd .mex && npm install && npm run build && cd ..
 ```
 
 ### Commands
 
 | Command | What it does |
 |---------|-------------|
+| `mex setup` | First-time setup — create `.mex/` scaffold and populate with AI |
+| `mex setup --dry-run` | Preview what setup would do without making changes |
 | `mex check` | Run all 8 checkers, output drift score and issues |
 | `mex check --quiet` | One-liner: `mex: drift score 92/100 (1 warning)` |
 | `mex check --json` | Full report as JSON for programmatic use |
@@ -108,19 +128,15 @@ Running check after drift is fixed by sync
 
 ![mex check after](screenshots/mex-check1.jpg) 
 
-### Shell Scripts
+### Shell Scripts (alternative)
 
-The shell scripts are **bash scripts** and require a bash-compatible shell. On macOS and Linux they work out of the box. On Windows, use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install), [Git Bash](https://gitforwindows.org/), or any bash-compatible terminal.
-
-These run from your project root. They auto-build the CLI if needed. All support `--help`.
+If you installed via git clone, these bash scripts are also available:
 
 ```bash
 bash .mex/setup.sh       # First-time setup — scan, prompt, populate
 bash .mex/sync.sh        # Interactive menu — check, sync, or export prompt
 bash .mex/update.sh      # Pull latest mex infrastructure, keep your content
 ```
-
-> **Note:** The CLI commands (`node .mex/dist/cli.js ...`) work on any platform with Node.js, including Windows cmd and PowerShell. Only the shell scripts above require bash.
 
 ## Before / After
 
@@ -214,12 +230,9 @@ your-project/
 │   │   ├── conventions.md     # naming, structure, patterns
 │   │   ├── decisions.md       # append-only decision log
 │   │   └── setup.md           # how to run locally
-│   ├── patterns/
-│   │   ├── INDEX.md           # pattern registry
-│   │   └── *.md               # task-specific guides with gotchas + verify checklists
-│   ├── setup.sh            # first-time setup
-│   ├── sync.sh             # interactive drift check + sync
-│   └── update.sh           # pull latest mex without touching content
+│   └── patterns/
+│       ├── INDEX.md           # pattern registry
+│       └── *.md               # task-specific guides with gotchas + verify checklists
 └── src/
 ```
 
@@ -232,7 +245,7 @@ your-project/
 | Windsurf | `.windsurfrules` |
 | GitHub Copilot | `copilot-instructions.md` |
 
-All config files contain identical content. `setup.sh` asks which tool you use and copies the right one.
+All config files contain identical content. `mex setup` asks which tool you use and copies the right one.
 
 ## Contributing
 

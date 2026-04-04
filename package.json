@@ -1,5 +1,5 @@
 {
-  "name": "mex",
+  "name": "mex-cli",
   "version": "0.2.0",
   "description": "CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync",
   "type": "module",
@@ -8,6 +8,7 @@
   },
   "files": [
     "dist",
+    "templates",
     "LICENSE",
     "README.md"
   ],
@@ -28,6 +29,10 @@
   },
   "author": "Daksh Jaitly",
   "license": "MIT",
+  "homepage": "https://github.com/theDakshJaitly/mex#readme",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

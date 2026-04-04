@@ -8,7 +8,22 @@ const program = new Command();
 program
   .name("mex")
   .description("CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync")
-  .version("0.1.0");
+  .version("0.2.0");
+
+// ── Setup (npx entry point) ──
+program
+  .command("setup")
+  .description("First-time setup — create .mex/ scaffold and populate with AI")
+  .option("--dry-run", "Show what would happen without making changes")
+  .action(async (opts) => {
+    try {
+      const { runSetup } = await import("./setup/index.js");
+      await runSetup({ dryRun: opts.dryRun });
+    } catch (err) {
+      console.error((err as Error).message);
+      process.exit(1);
+    }
+  });
 
 // ── Layer 2: Drift Detection ──
 program
@@ -126,6 +141,8 @@ program
   .description("List all available commands and scripts")
   .action(() => {
     console.log(chalk.bold("\nCLI Commands") + chalk.dim("  (run from project root)\n"));
+    console.log("  mex setup              First-time setup — create .mex/ scaffold");
+    console.log("  mex setup --dry-run    Preview setup without making changes");
     console.log("  mex check              Drift score — are scaffold files still accurate?");
     console.log("  mex check --quiet      One-liner drift score");
     console.log("  mex check --json       Full drift report as JSON");
