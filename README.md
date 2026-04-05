@@ -243,7 +243,9 @@ your-project/
 | Claude Code | `CLAUDE.md` |
 | Cursor | `.cursorrules` |
 | Windsurf | `.windsurfrules` |
-| GitHub Copilot | `copilot-instructions.md` |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| OpenCode | `.opencode/opencode.json` |
+| Codex (OpenAI) | `AGENTS.md` |
 
 All config files contain identical content. `mex setup` asks which tool you use and copies the right one.
 

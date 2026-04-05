@@ -44,6 +44,8 @@ const TOOL_CONFIGS: Record<string, { src: string; dest: string }> = {
   "2": { src: ".tool-configs/.cursorrules", dest: ".cursorrules" },
   "3": { src: ".tool-configs/.windsurfrules", dest: ".windsurfrules" },
   "4": { src: ".tool-configs/copilot-instructions.md", dest: ".github/copilot-instructions.md" },
+  "5": { src: ".tool-configs/opencode.json", dest: ".opencode/opencode.json" },
+  "6": { src: ".tool-configs/CLAUDE.md", dest: "AGENTS.md" },  // Codex reads AGENTS.md at root
 };
 
 // ── Helpers ──
@@ -309,11 +311,13 @@ async function selectToolConfig(
   console.log("  2) Cursor");
   console.log("  3) Windsurf");
   console.log("  4) GitHub Copilot");
-  console.log("  5) Multiple (select next)");
-  console.log("  6) None / skip");
+  console.log("  5) OpenCode");
+  console.log("  6) Codex (OpenAI)");
+  console.log("  7) Multiple (select next)");
+  console.log("  8) None / skip");
   console.log();
 
-  const choice = (await rl.question("Choice [1-6] (default: 1): ")).trim() || "1";
+  const choice = (await rl.question("Choice [1-8] (default: 1): ")).trim() || "1";
 
   let selectedClaude = false;
 
@@ -352,16 +356,18 @@ async function selectToolConfig(
     case "2":
     case "3":
     case "4":
+    case "5":
+    case "6":
       copyConfig(choice);
       break;
-    case "5": {
-      const multi = (await rl.question("Enter tool numbers separated by spaces (e.g. 1 2 4): ")).trim();
+    case "7": {
+      const multi = (await rl.question("Enter tool numbers separated by spaces (e.g. 1 2 5): ")).trim();
       for (const c of multi.split(/\s+/)) {
         copyConfig(c);
       }
       break;
     }
-    case "6":
+    case "8":
       info("Skipped tool config — AGENTS.md in .mex/ works with any tool that can read files");
       break;
     default:
