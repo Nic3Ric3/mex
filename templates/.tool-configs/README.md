@@ -1,7 +1,7 @@
 # Tool Configuration Files
 
 These files make the scaffold work with specific AI coding tools.
-All contain the same content — a pointer to `.mex/ROUTER.md`.
+Most embed the same content — a pointer to `.mex/ROUTER.md`. OpenCode uses a JSON config that references `.mex/AGENTS.md` instead.
 
 ## Which file does your tool use?
 
@@ -46,5 +46,5 @@ or paste it at the start of each session. The scaffold works identically.
 
 ## Content
 
-All files contain identical content — the Circle 1 anchor from `.mex/AGENTS.md`.
+Most files embed the Circle 1 anchor from `.mex/AGENTS.md`. OpenCode's `opencode.json` references it by path instead.
 `.mex/AGENTS.md` is the source of truth. If you update it, update your root tool config too.

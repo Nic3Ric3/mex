@@ -247,7 +247,7 @@ your-project/
 | OpenCode | `.opencode/opencode.json` |
 | Codex (OpenAI) | `AGENTS.md` |
 
-All config files contain identical content. `mex setup` asks which tool you use and copies the right one.
+Most config files embed the same instructions directly. OpenCode is the exception — `.opencode/opencode.json` references `.mex/AGENTS.md` instead of embedding content. `mex setup` asks which tool you use and creates the appropriate config.
 
 ## Contributing
 
