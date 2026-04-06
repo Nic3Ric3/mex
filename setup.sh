@@ -226,10 +226,12 @@ echo "  1) Claude Code"
 echo "  2) Cursor"
 echo "  3) Windsurf"
 echo "  4) GitHub Copilot"
-echo "  5) Multiple (select next)"
-echo "  6) None / other (skip)"
+echo "  5) OpenCode"
+echo "  6) Codex (OpenAI)"
+echo "  7) Multiple (select next)"
+echo "  8) None / other (skip)"
 echo ""
-printf "Choice [1-6] (default: 1): "
+printf "Choice [1-8] (default: 1): "
 read -r tool_choice
 tool_choice="${tool_choice:-1}"
 
@@ -251,22 +253,29 @@ copy_tool_config() {
       [ "$DRY_RUN" -eq 0 ] && mkdir -p "$PROJECT_DIR/.github"
       safe_copy "$SCRIPT_DIR/.tool-configs/copilot-instructions.md" "$PROJECT_DIR/.github/copilot-instructions.md"
       ;;
+    5)
+      [ "$DRY_RUN" -eq 0 ] && mkdir -p "$PROJECT_DIR/.opencode"
+      safe_copy "$SCRIPT_DIR/.tool-configs/opencode.json" "$PROJECT_DIR/.opencode/opencode.json"
+      ;;
+    6)
+      safe_copy "$SCRIPT_DIR/.tool-configs/CLAUDE.md" "$PROJECT_DIR/AGENTS.md"
+      ;;
   esac
 }
 
 case "$tool_choice" in
-  1|2|3|4)
+  1|2|3|4|5|6)
     copy_tool_config "$tool_choice"
     ;;
-  5)
+  7)
     echo ""
-    printf "Enter tool numbers separated by spaces (e.g. 1 2 4): "
+    printf "Enter tool numbers separated by spaces (e.g. 1 2 5): "
     read -r multi_choices
     for choice in $multi_choices; do
       copy_tool_config "$choice"
     done
     ;;
-  6|"")
+  8|"")
     info "Skipped tool config — AGENTS.md in .mex/ works with any tool that can read files"
     ;;
   *)
