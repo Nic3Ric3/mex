@@ -8,7 +8,7 @@ const program = new Command();
 program
   .name("mex")
   .description("CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync")
-  .version("0.2.0");
+  .version("0.4.0");
 
 // ── Setup (npx entry point) ──
 program
@@ -156,12 +156,7 @@ program
     console.log("  mex watch              Install post-commit hook for auto drift score");
     console.log("  mex watch --uninstall  Remove the post-commit hook");
     console.log();
-    console.log(chalk.bold("Shell Scripts") + chalk.dim("  (run from project root)\n"));
-    console.log("  bash .mex/setup.sh     First-time setup — scan, prompt, populate scaffold");
-    console.log("  bash .mex/sync.sh      Interactive sync menu — check, sync, or export prompt");
-    console.log("  bash .mex/update.sh    Pull latest mex infrastructure, keep your content");
-    console.log();
-    console.log(chalk.dim("Replace 'mex' with 'node .mex/dist/cli.js' if not globally linked."));
+    console.log(chalk.dim("Not installed globally? Replace 'mex' with 'npx promexeus'."));
     console.log();
   });
 

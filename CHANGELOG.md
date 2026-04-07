@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-04-07
+
+### Changed
+- **Simplified install flow** — `npx promexeus setup` now offers to install globally at the end, so `mex check` and `mex sync` just work
+- Users who skip global install get clear `npx promexeus` commands as the fallback
+- Removed dev-dependency + package.json scripts instructions — one canonical flow, not three
+- README install section rewritten: setup → global install prompt → done
+- Fixed wrong package name (`mex-cli`) in post-setup instructions
+- `mex commands` output cleaned up: removed shell scripts section, shows `npx promexeus` fallback
+
 ## [0.2.0] - 2026-04-05
 
 ### Added

@@ -107,7 +107,7 @@ export async function runSetup(opts: { dryRun?: boolean } = {}): Promise<void> {
   // Verify templates directory exists (sanity check for npm package integrity)
   if (!existsSync(TEMPLATES_DIR)) {
     throw new Error(
-      `Templates directory not found at ${TEMPLATES_DIR}. The mex-cli package may be corrupted — try reinstalling.`
+      `Templates directory not found at ${TEMPLATES_DIR}. The promexeus package may be corrupted — try reinstalling.`
     );
   }
 
@@ -239,6 +239,8 @@ export async function runSetup(opts: { dryRun?: boolean } = {}): Promise<void> {
 
     console.log();
     ok("Setup complete.");
+    await promptGlobalInstall();
+    return;
   } else {
     header("Almost done. One more step — populate the scaffold.");
     console.log();
@@ -264,7 +266,7 @@ export async function runSetup(opts: { dryRun?: boolean } = {}): Promise<void> {
     ok("Paste the prompt above into your agent to populate the scaffold.");
   }
 
-  printNextSteps();
+  await promptGlobalInstall();
 }
 
 // ── Step functions ──
@@ -405,24 +407,65 @@ function launchClaude(prompt: string): Promise<void> {
   });
 }
 
-function printNextSteps() {
-  console.log();
+async function promptGlobalInstall(): Promise<void> {
+  const rl = createInterface({ input: stdin, output: stdout });
+  try {
+    header("One more thing");
+    console.log();
+    info("Install mex globally so `mex check` works anywhere?");
+    console.log();
+
+    const answer = (await rl.question("  Install mex globally? [Y/n] ")).trim().toLowerCase();
+
+    if (answer === "" || answer === "y" || answer === "yes") {
+      console.log();
+      info("Installing promexeus globally...");
+      try {
+        execSync("npm install -g promexeus", { stdio: "inherit" });
+        console.log();
+        ok("Installed globally. `mex check` and `mex sync` work from anywhere now.");
+        printNextSteps(true);
+      } catch {
+        console.log();
+        warn("Global install failed. You can retry manually:");
+        console.log("    npm install -g promexeus");
+        console.log();
+        printNextSteps(false);
+      }
+    } else {
+      console.log();
+      info("No problem. You can always install later:");
+      console.log("    npm install -g promexeus");
+      console.log();
+      printNextSteps(false);
+    }
+  } finally {
+    rl.close();
+  }
+}
+
+function printNextSteps(globalInstalled: boolean) {
   header("What's next");
   console.log();
   info("Verify — start a fresh session and ask:");
   console.log('    "Read .mex/ROUTER.md and tell me what you know about this project."');
   console.log();
-  info("Available commands:");
-  console.log("    mex check              Drift score — are scaffold files still accurate?");
-  console.log("    mex check --quiet      One-liner drift score");
-  console.log("    mex sync               Fix drift — AI updates only what's broken");
-  console.log("    mex watch              Auto-check drift after every commit");
-  console.log();
-  info("Install as a dev dependency for ongoing use:");
-  console.log("    npm install --save-dev mex-cli");
-  console.log();
-  info("Then add to your package.json scripts:");
-  console.log(`    "mex": "mex check"`);
-  console.log(`    "mex:sync": "mex sync"`);
+
+  if (globalInstalled) {
+    info("Ongoing commands:");
+    console.log("    mex check              Drift score — are scaffold files still accurate?");
+    console.log("    mex check --quiet      One-liner drift score");
+    console.log("    mex sync               Fix drift — AI updates only what's broken");
+    console.log("    mex watch              Auto-check drift after every commit");
+  } else {
+    info("Ongoing commands (via npx):");
+    console.log("    npx promexeus check              Drift score — are scaffold files still accurate?");
+    console.log("    npx promexeus check --quiet      One-liner drift score");
+    console.log("    npx promexeus sync               Fix drift — AI updates only what's broken");
+    console.log("    npx promexeus watch              Auto-check drift after every commit");
+    console.log();
+    info("Or install globally to use the shorter `mex` command:");
+    console.log("    npm install -g promexeus");
+  }
   console.log();
 }

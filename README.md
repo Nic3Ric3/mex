@@ -41,38 +41,33 @@ Works with any stack — JavaScript, Python, Go, Rust, and more.
 
 ## Install
 
+The npm package is named `promexeus` (our social handle — `mex` was taken on npm). The CLI command is `mex`.
+
 ```bash
 npx promexeus setup
 ```
 
 That's it. The setup command creates the `.mex/` scaffold, asks which AI tool you use, pre-scans your codebase, and generates a targeted prompt to populate everything. Takes about 5 minutes.
 
-For ongoing use, install as a dev dependency:
+At the end of setup, you'll be asked to install mex globally. If you accept:
 
 ```bash
-npm install --save-dev promexeus
+mex check        # drift score
+mex sync         # fix drift
 ```
 
-Then add to your `package.json` scripts:
-
-```json
-{
-  "scripts": {
-    "mex": "mex check",
-    "mex:sync": "mex sync"
-  }
-}
-```
-
-<details>
-<summary>Alternative: install via git clone</summary>
+If you skip global install, everything still works via npx:
 
 ```bash
-git clone https://github.com/theDakshJaitly/mex.git .mex
-bash .mex/setup.sh
+npx promexeus check        # drift score
+npx promexeus sync         # fix drift
 ```
 
-</details>
+You can install globally later at any time:
+
+```bash
+npm install -g promexeus
+```
 
 ## Drift Detection
 
@@ -96,11 +91,7 @@ Scoring: starts at 100. Deducts -10 per error, -3 per warning, -1 per info.
 
 ## CLI
 
-All commands run from your **project root**.
-
-```bash
-mex check
-```
+All commands run from your **project root**. If you didn't install globally, replace `mex` with `npx promexeus`.
 
 ### Commands
 
@@ -126,17 +117,7 @@ mex check
 
 Running check after drift is fixed by sync
 
-![mex check after](screenshots/mex-check1.jpg) 
-
-### Shell Scripts (alternative)
-
-If you installed via git clone, these bash scripts are also available:
-
-```bash
-bash .mex/setup.sh       # First-time setup — scan, prompt, populate
-bash .mex/sync.sh        # Interactive menu — check, sync, or export prompt
-bash .mex/update.sh      # Pull latest mex infrastructure, keep your content
-```
+![mex check after](screenshots/mex-check1.jpg)
 
 ## Before / After
 
