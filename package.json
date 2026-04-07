@@ -1,6 +1,6 @@
 {
   "name": "promexeus",
-  "version": "0.4.0",
+  "version": "0.3.1",
   "description": "CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync",
   "type": "module",
   "bin": {
@@ -9,7 +9,6 @@
   "files": [
     "dist",
     "templates",
-    "visualize.sh",
     "LICENSE",
     "README.md"
   ],

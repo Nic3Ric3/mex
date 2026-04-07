@@ -74,39 +74,6 @@ export interface FrontmatterEdge {
   condition?: string;
 }
 
-// ── Import Graph ──
-
-export interface ImportEdge {
-  from: string;
-  to: string;
-  kind: "EXTRACTED";
-}
-
-export interface ImportGraph {
-  godNodes: string[];
-  leafNodes: string[];
-  edges: ImportEdge[];
-}
-
-// ── Rationale ──
-
-export type RationaleKind =
-  | "NOTE"
-  | "TODO"
-  | "HACK"
-  | "IMPORTANT"
-  | "FIXME"
-  | "WHY"
-  | "REASON"
-  | "DECISION";
-
-export interface RationaleComment {
-  file: string;
-  line: number;
-  comment: string;
-  kind: RationaleKind;
-}
-
 // ── Scanner ──
 
 export interface ManifestInfo {
@@ -144,8 +111,6 @@ export interface ScannerBrief {
   folderTree: FolderCategory[];
   tooling: ToolingInfo;
   readme: string | null;
-  importGraph: ImportGraph | null;
-  rationale: RationaleComment[];
   timestamp: string;
 }
 

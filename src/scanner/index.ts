@@ -4,15 +4,13 @@ import { scanEntryPoints } from "./entry-points.js";
 import { scanFolderTree } from "./folder-tree.js";
 import { scanTooling } from "./tooling.js";
 import { scanReadme } from "./readme.js";
-import { scanImportGraph } from "./import-graph.js";
-import { scanRationale } from "./rationale.js";
 
 /** Run pre-analysis scan and return brief or prompt */
 export async function runScan(
   config: MexConfig,
-  opts: { jsonOnly?: boolean; log?: (msg: string) => void }
+  opts: { jsonOnly?: boolean }
 ): Promise<ScannerBrief | string> {
-  const brief = buildBrief(config.projectRoot, opts.log);
+  const brief = buildBrief(config.projectRoot);
 
   if (opts.jsonOnly) return brief;
 
@@ -20,30 +18,13 @@ export async function runScan(
 }
 
 /** Build the scanner brief from codebase analysis */
-function buildBrief(projectRoot: string, log?: (msg: string) => void): ScannerBrief {
-  const step = log || (() => {});
-  step("Reading manifest...");
-  const manifest = scanManifest(projectRoot);
-  step("Detecting entry points...");
-  const entryPoints = scanEntryPoints(projectRoot);
-  step("Scanning folder tree...");
-  const folderTree = scanFolderTree(projectRoot);
-  step("Detecting tooling...");
-  const tooling = scanTooling(projectRoot);
-  step("Reading README...");
-  const readme = scanReadme(projectRoot);
-  step("Building import graph...");
-  const importGraph = scanImportGraph(projectRoot);
-  step("Extracting rationale comments...");
-  const rationale = scanRationale(projectRoot);
+function buildBrief(projectRoot: string): ScannerBrief {
   return {
-    manifest,
-    entryPoints,
-    folderTree,
-    tooling,
-    readme,
-    importGraph,
-    rationale,
+    manifest: scanManifest(projectRoot),
+    entryPoints: scanEntryPoints(projectRoot),
+    folderTree: scanFolderTree(projectRoot),
+    tooling: scanTooling(projectRoot),
+    readme: scanReadme(projectRoot),
     timestamp: new Date().toISOString(),
   };
 }
@@ -58,15 +39,11 @@ function buildPrompt(brief: ScannerBrief): string {
 ${briefJson}
 </brief>
 
-Using this brief, populate the mex scaffold files. The brief includes:
-- **Import graph**: file-to-file dependency edges, god nodes (most-imported files), and leaf nodes. Use this to understand architecture without reading files.
-- **Rationale comments**: NOTE/HACK/IMPORTANT/WHY/DECISION comments extracted from source. Use these for context/decisions.md and context/conventions.md.
-
-Focus on:
-1. context/architecture.md — use the import graph edges and god nodes to map system components and data flow
-2. context/stack.md — technologies, versions, key libraries from the manifest
-3. context/conventions.md — patterns visible in import graph structure + rationale comments
-4. context/decisions.md — seed with rationale comments (HACK, WHY, DECISION, IMPORTANT)
+Using this brief, populate the mex scaffold files. Focus on:
+1. context/architecture.md — system components, data flow, integrations
+2. context/stack.md — technologies, versions, key libraries
+3. context/conventions.md — code patterns, naming, file organization
+4. context/decisions.md — architectural choices and their rationale
 5. context/setup.md — how to set up and run the project
 6. ROUTER.md — update the "Current Project State" section
 
