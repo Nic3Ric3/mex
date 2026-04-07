@@ -10,9 +10,9 @@ import { scanRationale } from "./rationale.js";
 /** Run pre-analysis scan and return brief or prompt */
 export async function runScan(
   config: MexConfig,
-  opts: { jsonOnly?: boolean }
+  opts: { jsonOnly?: boolean; log?: (msg: string) => void }
 ): Promise<ScannerBrief | string> {
-  const brief = buildBrief(config.projectRoot);
+  const brief = buildBrief(config.projectRoot, opts.log);
 
   if (opts.jsonOnly) return brief;
 
@@ -20,15 +20,30 @@ export async function runScan(
 }
 
 /** Build the scanner brief from codebase analysis */
-function buildBrief(projectRoot: string): ScannerBrief {
+function buildBrief(projectRoot: string, log?: (msg: string) => void): ScannerBrief {
+  const step = log || (() => {});
+  step("Reading manifest...");
+  const manifest = scanManifest(projectRoot);
+  step("Detecting entry points...");
+  const entryPoints = scanEntryPoints(projectRoot);
+  step("Scanning folder tree...");
+  const folderTree = scanFolderTree(projectRoot);
+  step("Detecting tooling...");
+  const tooling = scanTooling(projectRoot);
+  step("Reading README...");
+  const readme = scanReadme(projectRoot);
+  step("Building import graph...");
+  const importGraph = scanImportGraph(projectRoot);
+  step("Extracting rationale comments...");
+  const rationale = scanRationale(projectRoot);
   return {
-    manifest: scanManifest(projectRoot),
-    entryPoints: scanEntryPoints(projectRoot),
-    folderTree: scanFolderTree(projectRoot),
-    tooling: scanTooling(projectRoot),
-    readme: scanReadme(projectRoot),
-    importGraph: scanImportGraph(projectRoot),
-    rationale: scanRationale(projectRoot),
+    manifest,
+    entryPoints,
+    folderTree,
+    tooling,
+    readme,
+    importGraph,
+    rationale,
     timestamp: new Date().toISOString(),
   };
 }

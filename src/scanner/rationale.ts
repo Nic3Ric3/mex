@@ -44,10 +44,22 @@ export function scanRationale(projectRoot: string): RationaleComment[] {
     cwd: projectRoot,
     ignore: [
       "node_modules/**",
+      "**/node_modules/**",
       "dist/**",
       "build/**",
       ".git/**",
       ".mex/**",
+      ".next/**",
+      ".nuxt/**",
+      ".cache/**",
+      ".turbo/**",
+      ".vercel/**",
+      ".output/**",
+      "coverage/**",
+      "__pycache__/**",
+      ".venv/**",
+      "venv/**",
+      "vendor/**",
       "**/*.d.ts",
       "**/*.test.*",
       "**/*.spec.*",
@@ -56,6 +68,7 @@ export function scanRationale(projectRoot: string): RationaleComment[] {
       "__tests__/**",
     ],
     absolute: false,
+    maxDepth: 10,
   });
 
   const results: RationaleComment[] = [];

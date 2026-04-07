@@ -26,19 +26,34 @@ const DYNAMIC_IMPORT_RE = /import\s*\(\s*['"](\.[^'"]+)['"]\s*\)/g;
 // Matches: require('./path')
 const REQUIRE_RE = /require\s*\(\s*['"](\.[^'"]+)['"]\s*\)/g;
 
+const IGNORE_DIRS = [
+  "node_modules/**",
+  "**/node_modules/**",
+  "dist/**",
+  "build/**",
+  ".git/**",
+  ".mex/**",
+  ".next/**",
+  ".nuxt/**",
+  ".cache/**",
+  ".turbo/**",
+  ".vercel/**",
+  ".output/**",
+  "coverage/**",
+  "__pycache__/**",
+  ".venv/**",
+  "venv/**",
+  "vendor/**",
+  "**/*.d.ts",
+];
+
 /** Collect all JS/TS source files in the project */
 function collectSourceFiles(projectRoot: string): string[] {
   return globSync("**/*.{ts,tsx,js,jsx}", {
     cwd: projectRoot,
-    ignore: [
-      "node_modules/**",
-      "dist/**",
-      "build/**",
-      ".git/**",
-      ".mex/**",
-      "**/*.d.ts",
-    ],
+    ignore: IGNORE_DIRS,
     absolute: false,
+    maxDepth: 10,
   });
 }
 
