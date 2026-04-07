@@ -8,7 +8,7 @@ const program = new Command();
 program
   .name("mex")
   .description("CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync")
-  .version("0.2.0");
+  .version("0.4.0");
 
 // ── Setup (npx entry point) ──
 program
