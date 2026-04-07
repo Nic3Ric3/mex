@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import type { Claim, DriftIssue } from "../../types.js";
 
-/** Runtimes, platforms, and databases that appear in stack docs but aren't installable packages */
+/** Runtimes, platforms, databases, protocols, and architectural terms that appear in stack docs but aren't installable packages */
 const KNOWN_RUNTIMES = new Set([
   "node.js", "node", "nodejs",
   "python", "cpython",
@@ -11,14 +11,28 @@ const KNOWN_RUNTIMES = new Set([
   "ruby",
   "java", "jdk", "jre",
   "deno", "bun",
+  "swift", "kotlin", "elixir", "erlang", "php",
+  ".net", "dotnet", "c#", "csharp",
   "sqlite", "sqlite3",
   "postgresql", "postgres",
   "mysql", "mariadb",
   "mongodb", "mongo",
   "redis",
   "elasticsearch",
+  "dynamodb", "cassandra", "neo4j", "supabase", "neon",
   "docker",
   "kubernetes", "k8s",
+  "vercel", "netlify", "railway", "fly.io", "render",
+  "aws", "gcp", "azure", "cloudflare",
+  "s3", "ec2", "lambda", "ecs", "fargate",
+  "rest", "rest api", "graphql", "grpc", "websocket", "websockets",
+  "oauth", "oauth2", "jwt", "saml", "oidc",
+  "http", "https", "tcp", "udp",
+  "tailwind", "tailwind css", "tailwindcss",
+  "bootstrap", "sass", "less", "postcss",
+  "webpack", "vite", "esbuild", "turbopack", "rollup", "parcel",
+  "git", "github", "gitlab", "ci/cd", "nginx", "apache", "caddy",
+  "linux", "macos", "windows", "wasm", "webassembly",
 ]);
 
 /** Check that claimed dependencies exist in manifests */
