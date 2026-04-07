@@ -13,8 +13,12 @@ const INDEX_RESOLUTION = [
 ];
 
 // Matches: import ... from './path'  |  export ... from './path'
+// Uses [^'"\n]* instead of [\s\S]*? to avoid catastrophic backtracking
 const STATIC_IMPORT_RE =
-  /(?:import|export)\s+(?:[\s\S]*?\s+from\s+)?['"](\.[^'"]+)['"]/g;
+  /(?:import|export)\s+[^'"]*?from\s+['"](\.[^'"]+)['"]/g;
+
+// Matches: side-effect import: import './path'
+const SIDE_EFFECT_IMPORT_RE = /import\s+['"](\.[^'"]+)['"]/g;
 
 // Matches: import('./path')
 const DYNAMIC_IMPORT_RE = /import\s*\(\s*['"](\.[^'"]+)['"]\s*\)/g;
@@ -85,7 +89,7 @@ function resolveImport(
 /** Extract all relative import specifiers from file content */
 function extractImportSpecifiers(content: string): string[] {
   const specifiers: string[] = [];
-  const regexes = [STATIC_IMPORT_RE, DYNAMIC_IMPORT_RE, REQUIRE_RE];
+  const regexes = [STATIC_IMPORT_RE, SIDE_EFFECT_IMPORT_RE, DYNAMIC_IMPORT_RE, REQUIRE_RE];
 
   for (const re of regexes) {
     re.lastIndex = 0;
