@@ -135,6 +135,47 @@ program
     }
   });
 
+// ── Visualizer ──
+program
+  .command("visualize")
+  .alias("viz")
+  .description("Launch interactive scaffold and source architecture visualizer")
+  .action(async () => {
+    try {
+      const config = findConfig();
+      const { execSync } = await import("node:child_process");
+      const { resolve, dirname } = await import("node:path");
+      const { existsSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+
+      // Look for visualize.sh relative to the CLI binary (npm package)
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      const packageRoot = resolve(__dirname, "..");
+      const candidates = [
+        resolve(config.scaffoldRoot, "visualize.sh"),
+        resolve(packageRoot, "visualize.sh"),
+      ];
+
+      const script = candidates.find((c) => existsSync(c));
+      if (!script) {
+        console.error(
+          "visualize.sh not found. Run 'mex setup' first or update your scaffold."
+        );
+        process.exit(1);
+      }
+
+      execSync(`bash "${script}"`, {
+        cwd: config.scaffoldRoot,
+        stdio: "inherit",
+      });
+    } catch (err) {
+      if ((err as any).status !== null) return; // user Ctrl+C
+      console.error((err as Error).message);
+      process.exit(1);
+    }
+  });
+
 // ── Quick Reference ──
 program
   .command("commands")
@@ -155,6 +196,7 @@ program
     console.log("  mex pattern add <name> Create a new pattern file");
     console.log("  mex watch              Install post-commit hook for auto drift score");
     console.log("  mex watch --uninstall  Remove the post-commit hook");
+    console.log("  mex visualize          Launch interactive graph visualizer (alias: mex viz)");
     console.log();
     console.log(chalk.bold("Shell Scripts") + chalk.dim("  (run from project root)\n"));
     console.log("  bash .mex/setup.sh     First-time setup — scan, prompt, populate scaffold");

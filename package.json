@@ -9,6 +9,7 @@
   "files": [
     "dist",
     "templates",
+    "visualize.sh",
     "LICENSE",
     "README.md"
   ],
