@@ -20,8 +20,8 @@ export function findConfig(startDir?: string): MexConfig {
   const projectRoot = gitRoot ?? dir;
 
   const mexDir = resolve(projectRoot, ".mex");
-  if (existsSync(mexDir) && !existsSync(resolve(mexDir, "setup.sh"))) {
-    throw new Error("Scaffold directory exists but looks incomplete. Run: bash .mex/setup.sh");
+  if (existsSync(mexDir) && !existsSync(resolve(mexDir, "ROUTER.md"))) {
+    throw new Error("Scaffold directory exists but looks incomplete. Run: npx mex init");
   }
 
   const scaffoldRoot = findScaffoldRoot(projectRoot);
@@ -31,7 +31,7 @@ export function findConfig(startDir?: string): MexConfig {
     }
 
     throw new Error(
-      "No .mex/ scaffold found. Run: git clone https://github.com/theDakshJaitly/mex.git .mex && bash .mex/setup.sh"
+      "No .mex/ scaffold found. Run: npx mex init"
     );
   }
 

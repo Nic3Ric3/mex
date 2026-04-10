@@ -33,13 +33,13 @@ describe("findConfig", () => {
 
   it("throws when no .mex/ scaffold found at all", () => {
     mkdirSync(join(tmpDir, ".git"));
-    expect(() => findConfig(tmpDir)).toThrow("No .mex/ scaffold found. Run: git clone");
+    expect(() => findConfig(tmpDir)).toThrow("No .mex/ scaffold found. Run: npx mex init");
   });
 
   it("works without .git if a complete scaffold exists", () => {
     const mexPath = join(tmpDir, ".mex");
     mkdirSync(mexPath);
-    writeFileSync(join(mexPath, "setup.sh"), "");
+    writeFileSync(join(mexPath, "ROUTER.md"), "");
     
     const config = findConfig(tmpDir);
     expect(config.projectRoot).toBe(tmpDir);
@@ -58,7 +58,7 @@ describe("findConfig", () => {
     mkdirSync(join(tmpDir, ".git"));
     const mexPath = join(tmpDir, ".mex");
     mkdirSync(mexPath);
-    writeFileSync(join(mexPath, "setup.sh"), "");
+    writeFileSync(join(mexPath, "ROUTER.md"), "");
     mkdirSync(join(tmpDir, "context"));
     const config = findConfig(tmpDir);
     expect(config.scaffoldRoot).toBe(mexPath);
