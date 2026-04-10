@@ -21,7 +21,7 @@ export function findConfig(startDir?: string): MexConfig {
 
   const mexDir = resolve(projectRoot, ".mex");
   if (existsSync(mexDir) && !existsSync(resolve(mexDir, "ROUTER.md"))) {
-    throw new Error("Scaffold directory exists but looks incomplete. Run: npx mex init");
+    throw new Error("Scaffold directory exists but looks incomplete. Run: mex setup");
   }
 
   const scaffoldRoot = findScaffoldRoot(projectRoot);
@@ -31,7 +31,7 @@ export function findConfig(startDir?: string): MexConfig {
     }
 
     throw new Error(
-      "No .mex/ scaffold found. Run: npx mex init"
+      "No .mex/ scaffold found. Run: mex setup"
     );
   }
 
