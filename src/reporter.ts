@@ -56,8 +56,9 @@ export function reportQuiet(report: DriftReport): void {
   console.log(`mex: drift score ${color(`${report.score}/100`)}${detail}`);
 }
 
-export function reportJSON(report: DriftReport): void {
-  console.log(JSON.stringify(report, null, 2));
+export function reportJSON(report: DriftReport, opts?: { verbose?: boolean }): void {
+  const output = opts?.verbose ? report : { ...report, verboseLog: undefined };
+  console.log(JSON.stringify(output, null, 2));
 }
 
 export function reportVerbose(report: DriftReport): void {

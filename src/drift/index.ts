@@ -134,7 +134,7 @@ function findScaffoldFiles(
   return [...new Set(files)];
 }
 
-function buildVerboseLog(
+export function buildVerboseLog(
   filesScanned: number,
   claims: Claim[],
   checkerIssueCounts: Array<[string, number]>

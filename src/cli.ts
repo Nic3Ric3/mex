@@ -40,7 +40,7 @@ program
       const report = await runDriftCheck(config, { verbose: opts.verbose });
 
       if (opts.json) {
-        reportJSON(report);
+        reportJSON(report, { verbose: opts.verbose });
       } else if (opts.quiet) {
         reportQuiet(report);
       } else {
