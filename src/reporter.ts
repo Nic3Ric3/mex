@@ -60,6 +60,15 @@ export function reportJSON(report: DriftReport): void {
   console.log(JSON.stringify(report, null, 2));
 }
 
+export function reportVerbose(report: DriftReport): void {
+  if (!report.verboseLog?.length) return;
+  console.log(chalk.dim("── Verbose ──"));
+  for (const line of report.verboseLog) {
+    console.log(chalk.dim(`  ${line}`));
+  }
+  console.log();
+}
+
 function printSummary(report: DriftReport): void {
   const errors = report.issues.filter((i) => i.severity === "error").length;
   const warnings = report.issues.filter(

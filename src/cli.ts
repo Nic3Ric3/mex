@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { Command } from "commander";
 import { findConfig } from "./config.js";
-import { reportConsole, reportQuiet, reportJSON } from "./reporter.js";
+import { reportConsole, reportQuiet, reportJSON, reportVerbose } from "./reporter.js";
 
 const program = new Command();
 
@@ -32,17 +32,19 @@ program
   .option("--json", "Output full drift report as JSON")
   .option("--quiet", "Single-line summary only")
   .option("--fix", "Run sync to fix any issues found")
+  .option("--verbose", "Show detailed diagnostic output")
   .action(async (opts) => {
     try {
       const config = findConfig();
       const { runDriftCheck } = await import("./drift/index.js");
-      const report = await runDriftCheck(config);
+      const report = await runDriftCheck(config, { verbose: opts.verbose });
 
       if (opts.json) {
         reportJSON(report);
       } else if (opts.quiet) {
         reportQuiet(report);
       } else {
+        if (opts.verbose) reportVerbose(report);
         reportConsole(report);
       }
 

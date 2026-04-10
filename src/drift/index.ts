@@ -15,13 +15,17 @@ import { checkCrossFile } from "./checkers/cross-file.js";
 import { checkScriptCoverage } from "./checkers/script-coverage.js";
 
 /** Run full drift detection across all scaffold files */
-export async function runDriftCheck(config: MexConfig): Promise<DriftReport> {
+export async function runDriftCheck(
+  config: MexConfig,
+  opts: { verbose?: boolean } = {}
+): Promise<DriftReport> {
   const { projectRoot, scaffoldRoot } = config;
 
   // Find all markdown files in scaffold
   const scaffoldFiles = findScaffoldFiles(projectRoot, scaffoldRoot);
   const allClaims: Claim[] = [];
   const allIssues: DriftIssue[] = [];
+  const checkerIssueCounts: Array<[string, number]> = [];
 
   // Extract claims from all files
   for (const filePath of scaffoldFiles) {
@@ -36,34 +40,55 @@ export async function runDriftCheck(config: MexConfig): Promise<DriftReport> {
 
     // Frontmatter edge check
     const frontmatter = parseFrontmatter(filePath);
-    allIssues.push(
-      ...checkEdges(frontmatter, filePath, source, projectRoot, scaffoldRoot)
-    );
+    const edgeIssues = checkEdges(frontmatter, filePath, source, projectRoot, scaffoldRoot);
+    allIssues.push(...edgeIssues);
 
     // Staleness check
     const stalenessIssues = await checkStaleness(source, source, projectRoot);
     allIssues.push(...stalenessIssues);
+
+    checkerIssueCounts.push([`edges:${source}`, edgeIssues.length]);
+    checkerIssueCounts.push([`staleness:${source}`, stalenessIssues.length]);
   }
 
   // Run checkers that work on claims
-  allIssues.push(...checkPaths(allClaims, projectRoot, scaffoldRoot));
-  allIssues.push(...checkCommands(allClaims, projectRoot));
-  allIssues.push(...checkDependencies(allClaims, projectRoot));
-  allIssues.push(...checkCrossFile(allClaims));
+  const pathIssues = checkPaths(allClaims, projectRoot, scaffoldRoot);
+  allIssues.push(...pathIssues);
+  checkerIssueCounts.push(["paths", pathIssues.length]);
+
+  const commandIssues = checkCommands(allClaims, projectRoot);
+  allIssues.push(...commandIssues);
+  checkerIssueCounts.push(["commands", commandIssues.length]);
+
+  const dependencyIssues = checkDependencies(allClaims, projectRoot);
+  allIssues.push(...dependencyIssues);
+  checkerIssueCounts.push(["dependencies", dependencyIssues.length]);
+
+  const crossFileIssues = checkCrossFile(allClaims);
+  allIssues.push(...crossFileIssues);
+  checkerIssueCounts.push(["cross-file", crossFileIssues.length]);
 
   // Run structural checkers
-  allIssues.push(...checkIndexSync(projectRoot, scaffoldRoot));
+  const indexSyncIssues = checkIndexSync(projectRoot, scaffoldRoot);
+  allIssues.push(...indexSyncIssues);
+  checkerIssueCounts.push(["index-sync", indexSyncIssues.length]);
 
   // Run coverage checkers (reality → scaffold direction)
-  allIssues.push(...checkScriptCoverage(scaffoldFiles, projectRoot));
+  const scriptCoverageIssues = checkScriptCoverage(scaffoldFiles, projectRoot);
+  allIssues.push(...scriptCoverageIssues);
+  checkerIssueCounts.push(["script-coverage", scriptCoverageIssues.length]);
 
   const score = computeScore(allIssues);
+  const verboseLog = opts.verbose
+    ? buildVerboseLog(scaffoldFiles.length, allClaims, checkerIssueCounts)
+    : undefined;
 
   return {
     score,
     issues: allIssues,
     filesChecked: scaffoldFiles.length,
     timestamp: new Date().toISOString(),
+    verboseLog,
   };
 }
 
@@ -107,4 +132,22 @@ function findScaffoldFiles(
 
   // Deduplicate
   return [...new Set(files)];
+}
+
+function buildVerboseLog(
+  filesScanned: number,
+  claims: Claim[],
+  checkerIssueCounts: Array<[string, number]>
+): string[] {
+  const pathClaims = claims.filter((claim) => claim.kind === "path").length;
+  const commandClaims = claims.filter((claim) => claim.kind === "command").length;
+  const dependencyClaims = claims.filter((claim) => claim.kind === "dependency").length;
+
+  return [
+    `Scaffold files scanned: ${filesScanned}`,
+    `Claims extracted: ${claims.length} (path: ${pathClaims}, command: ${commandClaims}, dependency: ${dependencyClaims})`,
+    ...checkerIssueCounts.map(
+      ([checker, count]) => `Checker ${checker}: ${count} issue${count === 1 ? "" : "s"}`
+    ),
+  ];
 }
