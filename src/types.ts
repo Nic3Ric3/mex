@@ -57,6 +57,7 @@ export interface DriftReport {
   issues: DriftIssue[];
   filesChecked: number;
   timestamp: string;
+  verboseLog?: string[];
 }
 
 // ── Frontmatter ──
