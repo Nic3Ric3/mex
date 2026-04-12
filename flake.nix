@@ -34,7 +34,7 @@
 
             meta = with pkgs.lib; {
               description = "CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync";
-              homepage = "https://github.com/PJalv/mex";
+              homepage = "https://github.com/theDakshJaitly/mex";
               license = licenses.mit;
               mainProgram = "mex";
               platforms = supportedSystems;
@@ -68,7 +68,6 @@
           default = pkgs.mkShell {
             buildInputs = with pkgs; [
               nodejs_22
-              npm
             ];
           };
         });
