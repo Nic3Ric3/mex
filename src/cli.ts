@@ -149,7 +149,7 @@ program
     console.log("  mex check --quiet      One-liner drift score");
     console.log("  mex check --json       Full drift report as JSON");
     console.log("  mex check --fix        Check and fix any errors found");
-    console.log("  mex sync               Fix drift — Claude updates only what's broken");
+    console.log("  mex sync               Fix drift — AI updates only what's broken");
     console.log("  mex sync --dry-run     Preview fix prompts without running them");
     console.log("  mex sync --warnings    Include warning-only files in sync");
     console.log("  mex init               Pre-scan codebase, build brief for AI");

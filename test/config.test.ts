@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { findConfig } from "../src/config.js";
+import { findConfig, saveAiTools } from "../src/config.js";
 
 let tmpDir: string;
 
@@ -62,5 +62,53 @@ describe("findConfig", () => {
     mkdirSync(join(tmpDir, "context"));
     const config = findConfig(tmpDir);
     expect(config.scaffoldRoot).toBe(mexPath);
+  });
+
+  it("returns empty aiTools when no config.json exists", () => {
+    mkdirSync(join(tmpDir, ".git"));
+    const mexPath = join(tmpDir, ".mex");
+    mkdirSync(mexPath);
+    writeFileSync(join(mexPath, "ROUTER.md"), "");
+    const config = findConfig(tmpDir);
+    expect(config.aiTools).toEqual([]);
+  });
+
+  it("loads aiTools from config.json when present", () => {
+    mkdirSync(join(tmpDir, ".git"));
+    const mexPath = join(tmpDir, ".mex");
+    mkdirSync(mexPath);
+    writeFileSync(join(mexPath, "ROUTER.md"), "");
+    writeFileSync(join(mexPath, "config.json"), JSON.stringify({ aiTools: ["opencode", "claude"] }));
+    const config = findConfig(tmpDir);
+    expect(config.aiTools).toEqual(["opencode", "claude"]);
+  });
+});
+
+describe("saveAiTools", () => {
+  it("creates config.json with aiTools", () => {
+    const mexPath = join(tmpDir, ".mex");
+    mkdirSync(mexPath, { recursive: true });
+    saveAiTools(mexPath, ["opencode"]);
+    const raw = JSON.parse(readFileSync(join(mexPath, "config.json"), "utf-8"));
+    expect(raw.aiTools).toEqual(["opencode"]);
+  });
+
+  it("preserves existing config keys when saving", () => {
+    const mexPath = join(tmpDir, ".mex");
+    mkdirSync(mexPath, { recursive: true });
+    writeFileSync(join(mexPath, "config.json"), JSON.stringify({ someOther: true }));
+    saveAiTools(mexPath, ["codex"]);
+    const raw = JSON.parse(readFileSync(join(mexPath, "config.json"), "utf-8"));
+    expect(raw.aiTools).toEqual(["codex"]);
+    expect(raw.someOther).toBe(true);
+  });
+
+  it("overwrites previous aiTools value", () => {
+    const mexPath = join(tmpDir, ".mex");
+    mkdirSync(mexPath, { recursive: true });
+    saveAiTools(mexPath, ["claude"]);
+    saveAiTools(mexPath, ["opencode", "codex"]);
+    const raw = JSON.parse(readFileSync(join(mexPath, "config.json"), "utf-8"));
+    expect(raw.aiTools).toEqual(["opencode", "codex"]);
   });
 });

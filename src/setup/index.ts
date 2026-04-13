@@ -11,6 +11,8 @@ import {
   buildExistingWithBriefPrompt,
   buildExistingNoBriefPrompt,
 } from "./prompts.js";
+import { saveAiTools } from "../config.js";
+import type { AiTool } from "../types.js";
 
 // ── Constants ──
 
@@ -302,6 +304,15 @@ function detectProjectState(projectRoot: string, mexDir: string): ProjectState {
   }
 }
 
+const TOOL_CHOICE_MAP: Record<string, AiTool> = {
+  "1": "claude",
+  "2": "cursor",
+  "3": "windsurf",
+  "4": "copilot",
+  "5": "opencode",
+  "6": "codex",
+};
+
 async function selectToolConfig(
   rl: ReturnType<typeof createInterface>,
   projectRoot: string,
@@ -322,12 +333,15 @@ async function selectToolConfig(
   const choice = (await rl.question("Choice [1-8] (default: 1): ")).trim() || "1";
 
   let selectedClaude = false;
+  const selectedTools: AiTool[] = [];
 
   const copyConfig = (key: string) => {
     const config = TOOL_CONFIGS[key];
     if (!config) return;
 
     if (key === "1") selectedClaude = true;
+    const tool = TOOL_CHOICE_MAP[key];
+    if (tool) selectedTools.push(tool);
 
     const src = resolve(TEMPLATES_DIR, config.src);
     const dest = resolve(projectRoot, config.dest);
@@ -375,6 +389,12 @@ async function selectToolConfig(
     default:
       warn("Unknown choice, skipping tool config");
       break;
+  }
+
+  // Persist tool selection
+  if (selectedTools.length > 0 && !dryRun) {
+    const mexDir = resolve(projectRoot, ".mex");
+    saveAiTools(mexDir, selectedTools);
   }
 
   return selectedClaude;
