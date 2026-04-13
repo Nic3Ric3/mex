@@ -199,7 +199,7 @@ export async function runSetup(opts: { dryRun?: boolean } = {}): Promise<void> {
     try {
       info("Scanning codebase...");
       const { runScan } = await import("../scanner/index.js");
-      const config = { projectRoot, scaffoldRoot: mexDir };
+      const config = { projectRoot, scaffoldRoot: mexDir, aiTools: [] as AiTool[] };
       const result = await runScan(config, { jsonOnly: true });
       scannerBrief = JSON.stringify(result, null, 2);
       ok("Pre-analysis complete — AI will reason from brief instead of exploring");
