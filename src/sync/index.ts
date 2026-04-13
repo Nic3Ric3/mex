@@ -41,12 +41,32 @@ function runToolInteractive(tool: AiTool, brief: string, cwd: string): boolean {
 /** Pick which AI tool to use for interactive sync */
 async function pickSyncTool(configuredTools: AiTool[]): Promise<AiTool | null> {
   // Filter to tools that have a CLI and are installed
-  const available = configuredTools.filter((t) => {
+  let available = configuredTools.filter((t) => {
     const meta = AI_TOOLS[t];
     return meta.cli && hasCliTool(meta.cli);
   });
 
-  if (available.length === 0) return null;
+  // If no configured tools matched, scan for any installed CLI and ask user
+  if (available.length === 0) {
+    const detected = (Object.keys(AI_TOOLS) as AiTool[]).filter((t) => {
+      const meta = AI_TOOLS[t];
+      return meta.cli && hasCliTool(meta.cli);
+    });
+
+    if (detected.length === 0) return null;
+
+    console.log(chalk.yellow("\nNo AI tool configured — but found installed CLI(s):"));
+    console.log();
+    detected.forEach((t, i) => {
+      console.log(`  ${i + 1}) ${AI_TOOLS[t].name}`);
+    });
+    console.log();
+
+    const choice = await askUser(`Which one should we use? [1-${detected.length}] (default: 1): `);
+    const idx = parseInt(choice || "1", 10) - 1;
+    return detected[idx] ?? detected[0];
+  }
+
   if (available.length === 1) return available[0];
 
   // Multiple CLI tools available — ask user
