@@ -56,15 +56,21 @@ function findProjectRoot(dir: string): string | null {
 const CONFIG_FILE = "config.json";
 
 interface MexPersistedConfig {
-  aiTools?: AiTool[];
+  aiTools?: unknown;
+  [key: string]: unknown;
 }
+
+const VALID_AI_TOOLS = new Set<string>(["claude", "cursor", "windsurf", "copilot", "opencode", "codex"]);
 
 function loadAiTools(scaffoldRoot: string): AiTool[] {
   const configPath = resolve(scaffoldRoot, CONFIG_FILE);
   if (!existsSync(configPath)) return [];
   try {
-    const raw = JSON.parse(readFileSync(configPath, "utf-8")) as MexPersistedConfig;
-    return Array.isArray(raw.aiTools) ? raw.aiTools : [];
+    const raw = JSON.parse(readFileSync(configPath, "utf-8"));
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return [];
+    const arr = (raw as MexPersistedConfig).aiTools;
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((v): v is AiTool => typeof v === "string" && VALID_AI_TOOLS.has(v));
   } catch {
     return [];
   }
@@ -72,13 +78,16 @@ function loadAiTools(scaffoldRoot: string): AiTool[] {
 
 export function saveAiTools(scaffoldRoot: string, tools: AiTool[]): void {
   const configPath = resolve(scaffoldRoot, CONFIG_FILE);
-  let existing: MexPersistedConfig = {};
+  let existing: Record<string, unknown> = {};
   if (existsSync(configPath)) {
     try {
-      existing = JSON.parse(readFileSync(configPath, "utf-8")) as MexPersistedConfig;
+      const raw = JSON.parse(readFileSync(configPath, "utf-8"));
+      if (typeof raw === "object" && raw !== null && !Array.isArray(raw)) {
+        existing = raw as Record<string, unknown>;
+      }
     } catch { /* start fresh */ }
   }
-  existing.aiTools = tools;
+  existing.aiTools = [...new Set(tools)];
   mkdirSync(dirname(configPath), { recursive: true });
   writeFileSync(configPath, JSON.stringify(existing, null, 2) + "\n");
 }
