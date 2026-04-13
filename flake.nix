@@ -18,10 +18,12 @@
         {
           default = pkgs.buildNpmPackage {
             pname = "mex";
-            version = "0.4.0";
+            version = "0.3.2";
 
             src = ./.;
 
+            # Update this hash when package-lock.json changes:
+            # nix build 2>&1 | grep 'got:' | awk '{print $2}'
             npmDepsHash = "sha256-5gqoL5TeF7giN/qM7VfqY33rutlkmnIbq6FYPBTF3QE=";
 
             npmBuildScript = "build";
