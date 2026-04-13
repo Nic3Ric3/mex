@@ -1,6 +1,6 @@
 {
   "name": "promexeus",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "CLI engine for mex scaffold — drift detection, pre-analysis, and targeted sync",
   "type": "module",
   "bin": {
