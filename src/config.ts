@@ -1,6 +1,6 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
-import type { MexConfig } from "./types.js";
+import type { MexConfig, AiTool } from "./types.js";
 
 /**
  * Walk up from startDir looking for .git to find project root,
@@ -35,7 +35,8 @@ export function findConfig(startDir?: string): MexConfig {
     );
   }
 
-  return { projectRoot, scaffoldRoot };
+  const aiTools = loadAiTools(scaffoldRoot);
+  return { projectRoot, scaffoldRoot, aiTools };
 }
 
 function findProjectRoot(dir: string): string | null {
@@ -48,6 +49,47 @@ function findProjectRoot(dir: string): string | null {
     if (parent === current) return null;
     current = parent;
   }
+}
+
+// ── AI Tool persistence ──
+
+const CONFIG_FILE = "config.json";
+
+interface MexPersistedConfig {
+  aiTools?: unknown;
+  [key: string]: unknown;
+}
+
+const VALID_AI_TOOLS = new Set<string>(["claude", "cursor", "windsurf", "copilot", "opencode", "codex"]);
+
+function loadAiTools(scaffoldRoot: string): AiTool[] {
+  const configPath = resolve(scaffoldRoot, CONFIG_FILE);
+  if (!existsSync(configPath)) return [];
+  try {
+    const raw = JSON.parse(readFileSync(configPath, "utf-8"));
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return [];
+    const arr = (raw as MexPersistedConfig).aiTools;
+    if (!Array.isArray(arr)) return [];
+    return arr.filter((v): v is AiTool => typeof v === "string" && VALID_AI_TOOLS.has(v));
+  } catch {
+    return [];
+  }
+}
+
+export function saveAiTools(scaffoldRoot: string, tools: AiTool[]): void {
+  const configPath = resolve(scaffoldRoot, CONFIG_FILE);
+  let existing: Record<string, unknown> = {};
+  if (existsSync(configPath)) {
+    try {
+      const raw = JSON.parse(readFileSync(configPath, "utf-8"));
+      if (typeof raw === "object" && raw !== null && !Array.isArray(raw)) {
+        existing = raw as Record<string, unknown>;
+      }
+    } catch { /* start fresh */ }
+  }
+  existing.aiTools = [...new Set(tools)];
+  mkdirSync(dirname(configPath), { recursive: true });
+  writeFileSync(configPath, JSON.stringify(existing, null, 2) + "\n");
 }
 
 function findScaffoldRoot(projectRoot: string): string | null {

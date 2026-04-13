@@ -1,5 +1,25 @@
 // ── Shared Types ──
 
+// ── AI Tool ──
+
+export type AiTool = "claude" | "cursor" | "windsurf" | "copilot" | "opencode" | "codex";
+
+export interface AiToolMeta {
+  name: string;
+  cli: string | null;
+  /** CLI flag to pass a prompt string directly */
+  promptFlag: string[];
+}
+
+export const AI_TOOLS: Record<AiTool, AiToolMeta> = {
+  claude:   { name: "Claude Code", cli: "claude",   promptFlag: [] },
+  cursor:   { name: "Cursor",      cli: null,       promptFlag: [] },
+  windsurf: { name: "Windsurf",    cli: null,       promptFlag: [] },
+  copilot:  { name: "Copilot",     cli: null,       promptFlag: [] },
+  opencode: { name: "OpenCode",    cli: "opencode", promptFlag: ["run"] },
+  codex:    { name: "Codex",       cli: "codex",    promptFlag: [] },
+};
+
 // ── Config ──
 
 export interface MexConfig {
@@ -7,6 +27,8 @@ export interface MexConfig {
   projectRoot: string;
   /** Absolute path to scaffold root (.mex/ directory) */
   scaffoldRoot: string;
+  /** Which AI tool(s) the user selected during setup */
+  aiTools: AiTool[];
 }
 
 // ── Claims (extracted from markdown) ──

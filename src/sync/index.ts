@@ -1,7 +1,8 @@
 import chalk from "chalk";
-import { spawnSync } from "node:child_process";
+import { spawnSync, execSync } from "node:child_process";
 import { createInterface } from "node:readline";
-import type { MexConfig, SyncTarget, DriftIssue } from "../types.js";
+import type { MexConfig, SyncTarget, DriftIssue, AiTool } from "../types.js";
+import { AI_TOOLS } from "../types.js";
 import { runDriftCheck } from "../drift/index.js";
 import { buildSyncBrief, buildCombinedBrief } from "./brief-builder.js";
 
@@ -15,13 +16,50 @@ function askUser(question: string): Promise<string> {
   });
 }
 
-function runClaudeInteractive(brief: string, cwd: string): boolean {
-  const result = spawnSync("claude", [brief], {
+function hasCliTool(cmd: string): boolean {
+  try {
+    execSync(`which ${cmd}`, { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function runToolInteractive(tool: AiTool, brief: string, cwd: string): boolean {
+  const meta = AI_TOOLS[tool];
+  if (!meta.cli) return false;
+
+  const args = [...meta.promptFlag, brief];
+  const result = spawnSync(meta.cli, args, {
     cwd,
     stdio: "inherit",
     timeout: 300_000,
   });
   return result.status === 0 || result.status === null;
+}
+
+/** Pick which AI tool to use for interactive sync */
+async function pickSyncTool(configuredTools: AiTool[]): Promise<AiTool | null> {
+  // Filter to tools that have a CLI and are installed
+  const available = configuredTools.filter((t) => {
+    const meta = AI_TOOLS[t];
+    return meta.cli && hasCliTool(meta.cli);
+  });
+
+  if (available.length === 0) return null;
+  if (available.length === 1) return available[0];
+
+  // Multiple CLI tools available — ask user
+  console.log(chalk.bold("\nWhich tool should fix these?"));
+  console.log();
+  available.forEach((t, i) => {
+    console.log(`  ${i + 1}) ${AI_TOOLS[t].name}`);
+  });
+  console.log();
+
+  const choice = await askUser(`Choice [1-${available.length}] (default: 1): `);
+  const idx = parseInt(choice || "1", 10) - 1;
+  return available[idx] ?? available[0];
 }
 
 type SyncMode = "interactive" | "prompts";
@@ -33,6 +71,7 @@ export async function runSync(
 ): Promise<void> {
   let cycle = 0;
   let mode: SyncMode | null = null;
+  let activeTool: AiTool | null = null;
 
   while (true) {
     cycle++;
@@ -107,9 +146,17 @@ export async function runSync(
 
     // Ask user for mode (only on first cycle)
     if (mode === null) {
+      // Determine if any configured tool has a usable CLI
+      const syncTool = await pickSyncTool(config.aiTools);
+      const toolName = syncTool ? AI_TOOLS[syncTool].name : null;
+
       console.log(chalk.bold("\nHow should we fix these?"));
       console.log();
-      console.log("  1) Interactive — Claude fixes with you watching (default)");
+      if (toolName) {
+        console.log(`  1) Interactive — ${toolName} fixes with you watching (default)`);
+      } else {
+        console.log("  1) Interactive — AI fixes with you watching (default)");
+      }
       console.log("  2) Show prompts — I'll paste manually");
       console.log("  3) Exit");
       console.log();
@@ -119,7 +166,15 @@ export async function runSync(
 
       switch (picked) {
         case "1":
-          mode = "interactive";
+          if (!syncTool) {
+            console.log(chalk.yellow("No supported AI CLI detected. Falling back to prompts mode."));
+            console.log(chalk.dim("Supported CLIs: claude, opencode, codex"));
+            console.log();
+            mode = "prompts";
+          } else {
+            activeTool = syncTool;
+            mode = "interactive";
+          }
           break;
         case "2":
           mode = "prompts";
@@ -143,13 +198,14 @@ export async function runSync(
 
     // Step 3: Fix all files in one interactive session
     console.log();
-    console.log(chalk.bold(`\nSending all ${targets.length} file(s) to Claude in one session...\n`));
+    const toolLabel = activeTool ? AI_TOOLS[activeTool].name : "AI";
+    console.log(chalk.bold(`\nSending all ${targets.length} file(s) to ${toolLabel} in one session...\n`));
 
     const brief = await buildCombinedBrief(targets, config.projectRoot);
-    const ok = runClaudeInteractive(brief, config.projectRoot);
+    const ok = runToolInteractive(activeTool!, brief, config.projectRoot);
 
     if (!ok) {
-      console.log(chalk.red("  ✗ Claude session failed"));
+      console.log(chalk.red(`  ✗ ${toolLabel} session failed`));
     }
 
     // Step 4: Verify
