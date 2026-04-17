@@ -48,7 +48,7 @@ Any plugin that accepts a system prompt can be pointed at `.mex/ROUTER.md`. The 
 
 ```lua
 -- Read the ROUTER once and pass it in as the system prompt
-local mex_prompt = vim.fn.readfile(".mex/ROUTER.md")
+local mex_prompt = table.concat(vim.fn.readfile(".mex/ROUTER.md"), "\n")
 ```
 
 Then feed `mex_prompt` into whatever field your plugin exposes (system prompt, instructions, custom context, etc).
