@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   mkdtempSync,
   writeFileSync,
@@ -14,6 +14,13 @@ import { checkDependencies } from "../src/drift/checkers/dependency.js";
 import { checkCrossFile } from "../src/drift/checkers/cross-file.js";
 import { checkIndexSync } from "../src/drift/checkers/index-sync.js";
 import type { Claim, ScaffoldFrontmatter } from "../src/types.js";
+
+vi.mock("../src/git.js", () => ({
+  daysSinceLastChange: vi.fn(),
+  commitsSinceLastChange: vi.fn(),
+}));
+const gitMock = await import("../src/git.js");
+const { checkStaleness } = await import("../src/drift/checkers/staleness.js");
 
 let tmpDir: string;
 
@@ -296,6 +303,68 @@ describe("checkIndexSync", () => {
       "<!-- [example.md](example.md) is a template -->\n\n| Pattern | Use when |\n|---|---|"
     );
     const issues = checkIndexSync(tmpDir, tmpDir);
+    expect(issues).toHaveLength(0);
+  });
+});
+
+// ── Staleness Checker ──
+
+describe("checkStaleness", () => {
+  const daysFn = gitMock.daysSinceLastChange as unknown as ReturnType<typeof vi.fn>;
+  const commitsFn = gitMock.commitsSinceLastChange as unknown as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    daysFn.mockReset();
+    commitsFn.mockReset();
+  });
+
+  it("returns no issues when both thresholds are clean", async () => {
+    daysFn.mockResolvedValue(10);
+    commitsFn.mockResolvedValue(5);
+    const issues = await checkStaleness("file.md", "source.md", ".");
+    expect(issues).toHaveLength(0);
+  });
+
+  it("returns a single issue when only the day threshold is exceeded", async () => {
+    daysFn.mockResolvedValue(100);
+    commitsFn.mockResolvedValue(5);
+    const issues = await checkStaleness("file.md", "source.md", ".");
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("error");
+    expect(issues[0].message).toContain("100 days");
+  });
+
+  it("collapses day + commit thresholds into a single compound issue", async () => {
+    daysFn.mockResolvedValue(100);
+    commitsFn.mockResolvedValue(250);
+    const issues = await checkStaleness("file.md", "source.md", ".");
+    expect(issues).toHaveLength(1);
+    expect(issues[0].code).toBe("STALE_FILE");
+    expect(issues[0].severity).toBe("error");
+    expect(issues[0].message).toContain("100 days");
+    expect(issues[0].message).toContain("250 commits");
+  });
+
+  it("uses the higher severity when one threshold is warning and the other error", async () => {
+    daysFn.mockResolvedValue(40);
+    commitsFn.mockResolvedValue(250);
+    const issues = await checkStaleness("file.md", "source.md", ".");
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("error");
+  });
+
+  it("keeps warning severity when neither threshold reaches error", async () => {
+    daysFn.mockResolvedValue(40);
+    commitsFn.mockResolvedValue(60);
+    const issues = await checkStaleness("file.md", "source.md", ".");
+    expect(issues).toHaveLength(1);
+    expect(issues[0].severity).toBe("warning");
+  });
+
+  it("returns empty when git history is unavailable", async () => {
+    daysFn.mockResolvedValue(null);
+    commitsFn.mockResolvedValue(null);
+    const issues = await checkStaleness("file.md", "source.md", ".");
     expect(issues).toHaveLength(0);
   });
 });
