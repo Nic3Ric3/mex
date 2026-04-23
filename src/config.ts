@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
-import type { MexConfig, AiTool } from "./types.js";
+import type { MexConfig, AiTool, StalenessThresholds } from "./types.js";
+import { DEFAULT_STALENESS_THRESHOLDS } from "./drift/checkers/staleness.js";
 
 /**
  * Walk up from startDir looking for .git to find project root,
@@ -36,7 +37,8 @@ export function findConfig(startDir?: string): MexConfig {
   }
 
   const aiTools = loadAiTools(scaffoldRoot);
-  return { projectRoot, scaffoldRoot, aiTools };
+  const stalenessThresholds = loadStalenessThresholds(scaffoldRoot);
+  return { projectRoot, scaffoldRoot, aiTools, stalenessThresholds };
 }
 
 function findProjectRoot(dir: string): string | null {
@@ -57,6 +59,7 @@ const CONFIG_FILE = "config.json";
 
 interface MexPersistedConfig {
   aiTools?: unknown;
+  staleness?: unknown;
   [key: string]: unknown;
 }
 
@@ -73,6 +76,58 @@ function loadAiTools(scaffoldRoot: string): AiTool[] {
     return arr.filter((v): v is AiTool => typeof v === "string" && VALID_AI_TOOLS.has(v));
   } catch {
     return [];
+  }
+}
+
+function loadStalenessThresholds(scaffoldRoot: string): StalenessThresholds | undefined {
+  const configPath = resolve(scaffoldRoot, CONFIG_FILE);
+  if (!existsSync(configPath)) return undefined;
+  try {
+    const raw = JSON.parse(readFileSync(configPath, "utf-8"));
+    if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return undefined;
+    const staleness = (raw as MexPersistedConfig).staleness;
+    if (typeof staleness !== "object" || staleness === null || Array.isArray(staleness)) return undefined;
+    const s = staleness as Record<string, unknown>;
+
+    const readInt = (key: string): number | undefined => {
+      const v = s[key];
+      if (typeof v === "number" && Number.isFinite(v) && v >= 0) return v;
+      return undefined;
+    };
+
+    const warnDays = readInt("warnDays");
+    const errorDays = readInt("errorDays");
+    const warnCommits = readInt("warnCommits");
+    const errorCommits = readInt("errorCommits");
+
+    // Any field missing falls back to defaults, so partial overrides still work.
+    if (warnDays === undefined && errorDays === undefined && warnCommits === undefined && errorCommits === undefined) {
+      return undefined;
+    }
+    const resolved: StalenessThresholds = {
+      warnDays: warnDays ?? DEFAULT_STALENESS_THRESHOLDS.warnDays,
+      errorDays: errorDays ?? DEFAULT_STALENESS_THRESHOLDS.errorDays,
+      warnCommits: warnCommits ?? DEFAULT_STALENESS_THRESHOLDS.warnCommits,
+      errorCommits: errorCommits ?? DEFAULT_STALENESS_THRESHOLDS.errorCommits,
+    };
+
+    // Reject inverted warn/error pairs. A misconfigured
+    // warnDays: 90, errorDays: 30 silently makes the warn path unreachable,
+    // so surface it and fall back to defaults rather than honoring a
+    // config that disables half of the checker.
+    if (resolved.errorDays < resolved.warnDays || resolved.errorCommits < resolved.warnCommits) {
+      console.warn(
+        `[mex] staleness thresholds in ${configPath} invert warn/error ` +
+          `(warnDays=${resolved.warnDays}, errorDays=${resolved.errorDays}, ` +
+          `warnCommits=${resolved.warnCommits}, errorCommits=${resolved.errorCommits}); ` +
+          `falling back to defaults.`
+      );
+      return { ...DEFAULT_STALENESS_THRESHOLDS };
+    }
+
+    return resolved;
+  } catch {
+    return undefined;
   }
 }
 
